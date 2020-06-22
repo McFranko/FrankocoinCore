@@ -61,7 +61,9 @@ fn connectionHandler(mut stream: std::net::TcpStream) {
         },
         "reqExec" => {
             // Send all executed code (frankolang code)
-        }
-        &_ => println!("Could not find request")
+        },
+        // Unexecuted Code is code that has it's signature verified, but is waiting to be added to a block by miners
+        // Executed code is code that has been interpreted and is part of a valid block (pretty self explanitory)
+        &_ => return
     }
 }
