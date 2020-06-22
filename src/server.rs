@@ -10,26 +10,24 @@ pub struct TcpServer {
 }
 
 impl TcpServer {
-    pub fn start(&self) {
+    pub fn start(&self, threads: usize) -> String {
+        //Bind to IP
         let listener = std::net::TcpListener::bind(&self.ipAddress);
         if !listener.is_ok() {
-            println!("Server failed to bind to ip address: \n{}\nError message:\n{}", &self.ipAddress, listener.unwrap_err());
-            std::process::exit(-1);
+            return listener.unwrap_err().to_string();
         }
 
+        let serverThreadPool = threadpool::ThreadPool::new(threads);
+
+        //Handle incoming connections
         for stream in listener.unwrap().incoming() {
             let handler = self.handler;
 
-            // Server is prone to DDOS attacks right now, a thread pool would make sense
-            // I'll do that later. Another solution is to just dedicate one memory address
-            // to storing the amount of threads available that can be read from and written
-            // to by all the threads. I'm not sure if that would be considered memory
-            // safe by the compiler though, or even allowed by the kernel.
-
-            std::thread::spawn(move || {
+            // Start new thread for each connection
+            serverThreadPool.execute(move || {
                 (handler)(stream.unwrap());
             });
         }
-        
+        return String::from("");
     }
 }
