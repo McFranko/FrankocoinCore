@@ -18,6 +18,7 @@ One other big part of Frankocoin is the mining algorithm I intend on implementin
 This accomplishes two things: a) it has a high memory requirement making it asic resistant, and b) it forces miners to keep a copy of the blockchain (or a part of it).
 
 Well there is no incentive for miners to host a server and run a full node, it does mean that they have to check the blockchain, and verify new blocks coming in. This means that it's much more likely for invalid blocks to be found and for the node who made them to be ousted. It contributes to a more secure and more verified network, making it safer for people who don't have the ability to run a node to be sure that the data they are getting is valid.
+
 Thank you for coming to my ted talk.
 
 Any help and suggestions are much appreciatted.
