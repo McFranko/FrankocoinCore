@@ -1,4 +1,7 @@
 #![allow(non_snake_case)]
+extern crate crypto;
+
+// mod frankolang;
 mod server;
 use std::io::Write;
 use std::io::Read;
@@ -12,7 +15,7 @@ fn main() {
     };
     // Start server on a new thread
     std::thread::spawn(move || {
-        println!("{}", server.start(50));
+        println!("{}", server.start(50)); // Prints the error message if there is one
     });
 
     // I had it just sleep for a minute now so I can test the server without the program just closing on me
@@ -23,40 +26,40 @@ fn main() {
 
 fn connectionHandler(mut stream: std::net::TcpStream) {
     // Read request
-    let mut req: [u8; 512] = [0; 512];
+    let mut req: Vec<u8> = vec![];
+    std::thread::sleep(std::time::Duration::from_secs(5));
     let err = stream.read(&mut req);
-    // Handle errors
     if err.is_err() {
-        eprintln!("Could not read stream");
+        eprintln!("Could not read request");
         return;
     }
-    // Find what type of request it is
-    let reqStr = std::str::from_utf8(&req);
+    // Convert request to string
+    let reqStr = String::from_utf8(req).unwrap();
+
     // I know I could probably make it a little faster by not converting it a string
     // and just comparing the sent buffer against buffers of the keyworks below, but
     // this is just a lot easier. Maybe someone else can do that if they really feel
     // like it.
-
-    // Handle errors
-    if reqStr.is_err() {
-        eprintln!("Could not convert request to string");
-        return;
-    }
-    let reqSplit: Vec<&str> = reqStr.unwrap().splitn(1, '\n').collect();
+    
+    let reqSplit: Vec<&str> = reqStr.splitn(1, '\n').collect();
+    println!("Received request: {}", reqSplit[0]);
     match reqSplit[0] {
         "newBlock" => {
             // Check blocks proof of work
+            // Skipping this for now
 
             // Verify the signature for each grouping of frankolang
+            // Skipping this as well
 
             // Send the code to the frankolang interpreter
+            
         },
         "newCodeSection" => {
             // Verify the signature
             // Add to the unexecuted code variable
         },
         "reqBlock" => {
-            // Find what block they are requesting and add write it to the stream
+            // Find what block they are requesting and write it to the stream
         },
         "reqUnexec" => {
             // Send all unexecuted code (frankolang code)
