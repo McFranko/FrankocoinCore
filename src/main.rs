@@ -21,7 +21,7 @@ fn main() {
 
     // Create server object
     let server = server::TcpServer {
-        ipAddress: String::from("localhost:8888"),
+        ipAddress: String::from("localhost:8888"), // Will be a public server (later once config is done)
         handler: connectionHandler
     };
     // Start server on a new thread
@@ -29,8 +29,43 @@ fn main() {
         println!("{}", server.start(50)); // Prints the error message if there is one
     });
 
+
+
+    
     // Start Frankolang interpreter
-    frankolang::startFrankolangInterpreter();
+    std::thread::spawn(|| {
+        frankolang::startFrankolangInterpreter();
+    });
+
+    std::thread::sleep(std::time::Duration::from_secs(1)); // Waits two seconds to let the interpreter start
+
+    // Connecting to the interpreter
+    let frankolangInterpreterErr = std::net::TcpStream::connect("localhost:8354");
+    let mut frankolangInterpreter;
+    if frankolangInterpreterErr.is_err() {
+        eprintln!("Could not connect to Frankolang Interpreter");
+        std::process::exit(0);
+    } else {
+        frankolangInterpreter = frankolangInterpreterErr.unwrap();
+    }
+
+    // Testing interpreter:
+
+    // make request
+    let mut request: [u8; 512] = [0; 512];
+    request[0] = 0x11;
+    request[1] = 0x01;
+    request[98] = 0x03;
+    request[98+73] = 0x04;
+    request[98+73+9] = 0x02;
+    request[98+73+9+1] = 0x0f;
+    
+    // send request
+    let err = frankolangInterpreter.write(&request);
+    println!("Made buffer");
+    if err.is_err() {
+        eprintln!("Cannot write to frankolang interpreter socket");
+    }
 
     // I had it just sleep for a minute now so I can test the server without the program just closing on me
     std::thread::sleep(std::time::Duration::from_secs(60));

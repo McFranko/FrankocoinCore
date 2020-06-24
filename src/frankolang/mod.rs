@@ -19,15 +19,16 @@ pub fn startFrankolangInterpreter() {
 
 // Interpreting is right here
 fn interpretFrankolang(code: &[u8]) {
-    let mut finished = false;
     let mut currentByte = 0; // The byte with the first part of the instruction
-    while !finished {
+    
+    loop {
         // Find current instruction
         match code[currentByte] {
             // execute instructions
             0x0f => {
                 // ends the interpreted code
-                finished = true;
+                println!("Frankolang Interpreter: Finished interpreting");
+                break;
             }
             0x01 => {
                 // startsig is 97 bytes long
@@ -47,9 +48,11 @@ fn interpretFrankolang(code: &[u8]) {
             0x04 => {
                 // fee is 9 bytes
                 println!("Frankolang Interpreter: Interpreting fee instruction");
+                currentByte+=9;
             }
             _ => {
-                println!("Frankolang Interpreter: Syntax error");
+                println!("Frankolang Interpreter: Syntax error on instruction {}\nInstruction as decimal {}", currentByte, code[currentByte]);
+                break;
             }
         }
     }
@@ -58,8 +61,9 @@ fn interpretFrankolang(code: &[u8]) {
 
 fn handle(mut stream: std::net::TcpStream) {
     // Read request
-    let mut req: [u8; 2097152] = [0; 2097152]; // It would be better if this was a vector so it didn't use up so much ram, but i couldn't figure it out and I don't wanna spend too much time on it
+    let mut req: [u8; 512] = [0; 512]; // It would be better if this was a vector so it didn't use up so much ram, but i couldn't figure it out and I don't wanna spend too much time on it
     let err = stream.read(&mut req);
+    
     if err.is_err() {
         eprintln!("Frankolang Interpreter: Could not read stream");
         return;
@@ -72,6 +76,7 @@ fn handle(mut stream: std::net::TcpStream) {
             interpretFrankolang(&req);
         }
         _ => {
+            let test: u8 = 20;
             println!("Frankolang Interpreter: {} is not a command", req[0]);
         }
     }
