@@ -29,6 +29,9 @@ fn main() {
         println!("{}", server.start(50)); // Prints the error message if there is one
     });
 
+    // Start Frankolang interpreter
+    frankolang::startFrankolangInterpreter();
+
     // I had it just sleep for a minute now so I can test the server without the program just closing on me
     std::thread::sleep(std::time::Duration::from_secs(60));
 }

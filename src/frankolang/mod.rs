@@ -19,10 +19,10 @@ pub fn startFrankolangInterpreter() {
 
 // Interpreting is right here
 fn interpretFrankolang(code: &[u8]) {
-    // Find instructions
     let mut finished = false;
     let mut currentByte = 0; // The byte with the first part of the instruction
     while !finished {
+        // Find current instruction
         match code[currentByte] {
             // execute instructions
             0x0f => {
