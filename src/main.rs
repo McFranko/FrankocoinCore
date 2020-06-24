@@ -1,14 +1,25 @@
 #![allow(non_snake_case)]
 extern crate crypto;
 
-// mod frankolang;
+mod frankolang;
 mod server;
 use std::io::Write;
 use std::io::Read;
 
-
 fn main() {
-    // Create server and make parameters
+    // I need to make a config file to hold ip addresses and such
+
+    // Check if config exists
+
+    // If config doesn't exist prompt user for the parameters
+
+    // If config does exist then try to interpret it
+
+    // If config syntax is incorrect prompt user if they want to make a new config file
+    // If they don't make a new one then exit the program
+
+
+    // Create server object
     let server = server::TcpServer {
         ipAddress: String::from("localhost:8888"),
         handler: connectionHandler
@@ -21,7 +32,6 @@ fn main() {
     // I had it just sleep for a minute now so I can test the server without the program just closing on me
     std::thread::sleep(std::time::Duration::from_secs(60));
 }
-
 
 
 fn connectionHandler(mut stream: std::net::TcpStream) {
@@ -56,6 +66,7 @@ fn connectionHandler(mut stream: std::net::TcpStream) {
         },
         "newCodeSection" => {
             // Verify the signature
+            // Verify syntax
             // Add to the unexecuted code variable
         },
         "reqBlock" => {
