@@ -3,6 +3,7 @@
 // Communication will be done via a socket.
 #![allow(dead_code)]
 use crate::server;
+use std::io::Write;
 use std::io::Read;
 
 pub fn startFrankolangInterpreter() {
@@ -12,13 +13,13 @@ pub fn startFrankolangInterpreter() {
         handler: handle
     };
     std::thread::spawn(move || {
-        println!("{}", socket.start(2));
+        println!("{}", socket.start(1));
     });   
 }
 
 
-// Interpreting is right here
-fn interpretFrankolang(code: &[u8]) {
+// Interpreting is right here. Will return true if it goes smoothly and false if it didn't
+fn interpretFrankolang(code: &[u8]) -> bool{
     let mut currentByte = 0; // The byte with the first part of the instruction
     
     loop {
@@ -28,7 +29,7 @@ fn interpretFrankolang(code: &[u8]) {
             0x0f => {
                 // ends the interpreted code
                 println!("Frankolang Interpreter: Finished interpreting");
-                break;
+                return true;
             }
             0x01 => {
                 // startsig is 97 bytes long
@@ -52,32 +53,55 @@ fn interpretFrankolang(code: &[u8]) {
             }
             _ => {
                 println!("Frankolang Interpreter: Syntax error on instruction {}\nInstruction as decimal {}", currentByte, code[currentByte]);
-                break;
+                return false
             }
         }
     }
     
 }
 
-fn handle(mut stream: std::net::TcpStream) {
-    // Read request
-    let mut req: [u8; 512] = [0; 512]; // It would be better if this was a vector so it didn't use up so much ram, but i couldn't figure it out and I don't wanna spend too much time on it
-    let err = stream.read(&mut req);
-    
-    if err.is_err() {
-        eprintln!("Frankolang Interpreter: Could not read stream");
-        return;
-    }
-
-    // Execute request
-    match req[0] {
-        0x11 => {
-            req.rotate_left(1);
-            interpretFrankolang(&req);
+fn handle(mut socket: std::net::TcpStream) {
+    loop {
+        let mut req: [u8; 512] = [0; 512]; // It would be better if this was a vector so it didn't use up so much ram, but i couldn't figure it out and I don't wanna spend too much time on it
+        let err = socket.read(&mut req);
+        match err {
+            Err(e) => {
+                eprintln!("Frankolang Interpreter: Could not read from stream.\nError: {}", e);
+                return;
+            },
+            _ =>  {}
         }
-        _ => {
-            let test: u8 = 20;
-            println!("Frankolang Interpreter: {} is not a command", req[0]);
+        // Execute request
+        match req[0] {
+            0x11 => {
+                req.rotate_left(1);
+                interpretFrankolang(&req);
+            }
+            0x12 => {
+                req.rotate_left(1);
+                if interpretFrankolang(&req) {
+                    let result: [u8; 1] = [1];
+                    let err = socket.write(&result);
+                    match err {
+                        Err(e) => eprintln!("Frankolang Interpreter: Could not write to socket. Error Message: {}", e),
+                        _ =>  {}
+                    }
+                } else {
+                    let result: [u8; 1] = [0];
+                    let err = socket.write(&result);
+                    match err {
+                        Err(e) => eprintln!("Frankolang Interpreter: Could not write to socket. Error Message: {}", e),
+                        _ =>  {}
+                    }
+                }
+            }
+            0xff => {
+                break;
+            }
+            _ => {
+                println!("Frankolang Interpreter: {} is not a command", req[0]);
+            }
         }
+        std::thread::sleep(std::time::Duration::from_millis(250)); // Only checks every 250 milliseconds to ensure
     }
 }
