@@ -48,7 +48,7 @@ fn main() {
         frankolangInterpreter = frankolangInterpreterErr.unwrap();
     }
 
-    // Testing interpreter:
+    // Testing interpreter /*
 
     // make request
     let mut request: [u8; 512] = [0; 512];
@@ -79,6 +79,8 @@ fn main() {
     } else {
         println!("Invalid frankolang");
     }
+
+    //      *\
 
     // I had it just sleep for a minute now so I can test the server without the program just closing on me
     std::thread::sleep(std::time::Duration::from_secs(60));

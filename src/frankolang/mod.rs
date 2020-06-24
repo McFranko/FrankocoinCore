@@ -62,7 +62,7 @@ fn interpretFrankolang(code: &[u8]) -> bool{
 
 fn handle(mut socket: std::net::TcpStream) {
     loop {
-        let mut req: [u8; 512] = [0; 512]; // It would be better if this was a vector so it didn't use up so much ram, but i couldn't figure it out and I don't wanna spend too much time on it
+        let mut req: [u8; 1048576] = [0; 1048576]; // It would be better if this was a vector so it didn't use up so much ram, but i couldn't figure it out and I don't wanna spend too much time on it
         let err = socket.read(&mut req);
         match err {
             Err(e) => {
