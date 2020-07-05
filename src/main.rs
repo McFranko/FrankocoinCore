@@ -1,8 +1,10 @@
 #![allow(non_snake_case)]
-extern crate crypto;
+extern crate ed25519_dalek;
+extern crate rand;
 
 mod frankolang;
 mod server;
+use frankolang::Frankolang;
 use std::io::Write;
 use std::io::Read;
 
@@ -28,16 +30,13 @@ fn main() {
         println!("{}", server.start(50)); // Prints the error message if there is one
     });
 
-
-
-    
     // Start Frankolang interpreter
     std::thread::spawn(|| {
-        frankolang::startFrankolangInterpreter();
+        Frankolang::startFrankolangInterpreter();
     });
 
     std::thread::sleep(std::time::Duration::from_millis(250)); // Waits a bit to ensure the interpreter starts before trying to connect to it
-    
+
     // Connecting to the interpreter
     let frankolangInterpreterErr = std::net::TcpStream::connect("localhost:8354");
     let mut frankolangInterpreter;
@@ -52,13 +51,49 @@ fn main() {
 
     // make request
     let mut request: [u8; 512] = [0; 512];
+    let mut message: [u8; 180] = [0; 180];
+    message[0] = 0x03; // payto
+    message[73] = 0x04; // fee
+    message[73+9] = 0x02; // endsig
+
+
+
+    // Testing signature
+    // Generating the signature is just used to check if the interpreter is working for now
+    // It will be removed later
+
+    let mut messageToSign: [u8; 83] = [0; 83];
+    for byte in 0..83 {
+        messageToSign[byte] = message[byte];
+    }
+
+    // This is just generating a signature on the message in order to test the signature checking on the Interpreter
+    // This will be removed later
+    let mut csprng = rand::rngs::OsRng;
+    let keypair: ed25519_dalek::Keypair = ed25519_dalek::Keypair::generate(&mut csprng);
+    let signatureObj: ed25519_dalek::Signature = keypair.sign(&messageToSign);
+    let signature = signatureObj.to_bytes();
+    let publicKey = keypair.public.to_bytes();
+
+    // Add signature and public key to message
+    message.rotate_right(97);
+    message[0] = 0x01;
+
+    for byte in 1..65 {
+        message[byte] = signature[byte-1];
+    }
+    for byte in 65..97 {
+        message[byte] = publicKey[byte-65];
+    }
+
+    // Add commands to message in request buffer
     request[0] = 0x12;
-    request[1] = 0x01;
-    request[98] = 0x03;
-    request[98+73] = 0x04;
-    request[98+73+9] = 0x02;
-    request[98+73+9+1] = 0x0f;
-    
+    for byte in 1..181 {
+        request[byte] = message[byte-1];
+    }
+    request[181] = 0x0f;
+
+
     // send request
     let err = frankolangInterpreter.write(&request);
     if err.is_err() {
@@ -89,42 +124,36 @@ fn main() {
 
 fn connectionHandler(mut stream: std::net::TcpStream) {
     // Read request
-    let mut req: Vec<u8> = vec![];
+    let mut req: [u8; 1048576] = [0; 1048576];
     std::thread::sleep(std::time::Duration::from_secs(5));
     let err = stream.read(&mut req);
     if err.is_err() {
         eprintln!("Could not read request");
         return;
     }
-    // Convert request to string
-    let reqStr = String::from_utf8(req).unwrap();
 
-    // I know I could probably make it a little faster by not converting it a string
-    // and just comparing the sent buffer against buffers of the keyworks below, but
-    // this is just a lot easier. Maybe someone else can do that if they really feel
-    // like it.
-    let reqSplit: Vec<&str> = reqStr.splitn(1, '\n').collect();
-    println!("Received request: {}", reqSplit[0]);
+
+    let reqSplit: Vec<&[u8]> = req.splitn(1, |num| *num == 0x0a).collect(); // 0x0a is the hex code for \n
+    println!("Received request: {}", std::str::from_utf8(reqSplit[0]).expect(""));
     match reqSplit[0] {
-        "newBlock" => {
+        b"newBlock" => {
             // Check blocks proof of work
             // Skipping this for now
 
-            // Verify the signature for each grouping of frankolang
-            // Skipping this as well
+            // Perform dryrun of code to check syntax and signatures
 
             // Send the code to the frankolang interpreter
-            
+
         },
-        "newCodeSection" => {
+        b"newCodeSection" => {
             // Verify the signature
             // Verify syntax
             // Add to the unexecuted code variable
         },
-        "reqBlock" => {
+        b"reqBlock" => {
             // Find what block they are requesting and write it to the stream
         },
-        "reqUnexec" => {
+        b"reqUnexec" => {
             // Send all unexecuted code (frankolang code)
             // Unexecuted Code is code that has it's signature verified, but is waiting to be added to a block by miners
         },
