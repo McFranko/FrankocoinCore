@@ -10,24 +10,25 @@ pub struct TcpServer {
 }
 
 impl TcpServer {
-    pub fn start(&self, threads: usize) -> String {
-        //Bind to IP
+    pub fn start(&self, threads: usize) {
         let listener = std::net::TcpListener::bind(&self.ipAddress);
-        if !listener.is_ok() {
-            return listener.unwrap_err().to_string();
-        }
+        let listener = match listener {
+            Ok(listener) => listener,
+            Err(error) => { eprintln!("{}", error); return }
+        };
 
         let serverThreadPool = threadpool::ThreadPool::new(threads);
 
-        //Handle incoming connections
-        for stream in listener.unwrap().incoming() {
+        for stream in listener.incoming() {
+            let stream = match stream {
+                Ok(stream) => stream,
+                Err(error) => { eprintln!("{}", error); return }
+            };
             let handler = self.handler;
 
-            // Start new thread for each connection
             serverThreadPool.execute(move || {
-                (handler)(stream.unwrap());
+                (handler)(stream);
             });
         }
-        return String::from("");
     }
 }
