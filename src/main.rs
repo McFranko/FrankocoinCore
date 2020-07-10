@@ -34,7 +34,7 @@ fn main() {
 
     // Testing signature
     // Generating the signature is just used to check if the interpreter is working for now
-    // It will be removed later
+    // Yes I know this code is absolutely terrible, it will be removed later
 
     let mut messageToSign: [u8; 83] = [0; 83];
     for byte in 0..83 {
