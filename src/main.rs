@@ -24,11 +24,10 @@ fn main() {
 
     // Testing interpreter /*
 
-    // make message
     let mut message: [u8; 180] = [0; 180];
-    message[0] = 0x03; // payto
-    message[73] = 0x04; // fee
-    message[73+9] = 0x02; // endsig
+    message[0] = 0x03;
+    message[73] = 0x04;
+    message[73+9] = 0x02;
 
 
 
@@ -77,13 +76,12 @@ fn main() {
 
 
 fn connectionHandler(mut socket: std::net::TcpStream) {
-    // Read request
     let mut request: [u8; 1048576] = [0; 1048576];
     socket.read(&mut request).unwrap();
 
     match splitBufferAt(&request, 0x0a, 1)[0] { // 0x0a is ASCII newline or \n
         b"newBlock" => {
-            // socket.write(newBlock(splitRequest[1]));
+            
         },
         &_ => return
     }
