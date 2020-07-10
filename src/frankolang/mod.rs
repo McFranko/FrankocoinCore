@@ -1,155 +1,109 @@
-// Frankolang interpeter
-// This will always be on for the duration of the program on another thread
-// Communication will be done via a socket.
-#![allow(dead_code)]
 #![allow(non_snake_case)]
-extern crate ed25519_dalek;
 
-use crate::server;
-use std::io::Write;
-use std::io::Read;
+use crate::ed25519_dalek;
+use crate::header::*;
 
-pub struct Frankolang;
+pub fn interpretFrankolang(code: &[u8], dryrun: bool) -> bool {
 
-impl Frankolang {
-    // Start the interpreter
-    pub fn startFrankolangInterpreter() {
-            // Starts the Frankolang interpreter
-            let socket = server::TcpServer {
-                ipAddress: String::from("localhost:8354"),
-                handler: handle
-            };
-            std::thread::spawn(move || {
-                println!("{}", socket.start(1));
-            });
-        }
+    let mut codeSegment = CodeSegment::new(code, 0);
+    if !codeSegment.isSignatureValid() { return false; };
+    codeSegment.moveIntructionPointerForward();
 
+    loop {
+        match codeSegment.currentInstruction() {
+            0x02 => { return true }
 
-    // Interpreting is right here. Will return true if it goes smoothly and false if it didn't
-    fn interpretFrankolang(code: &[u8], dryrun: bool) -> bool{
-        let mut currentByte = 0; // The byte with the first part of the instruction
-
-        loop {
-            // Find current instruction
-            match code[currentByte] {
-                // execute instructions
-                0x0f => {
-                    // ends the interpreted code
-                    println!("Frankolang Interpreter: Finished interpreting");
-                    return true;
-                }
-                0x01 => {
-                    // startsig is 97 bytes long
-                    println!("Frankolang Interpreter: Interpreting startsig instruction");
-
-
-                    // Make a buffer from the code (excluding startsig instruction)
-                    let mut message: Vec<u8> = Vec::new();
-                    let mut isThereAnEnd = false;
-                    for n in currentByte+97..code.len() {
-                        message.push(code[n]);
-                        if code[n] == 0x02 {
-                            isThereAnEnd = true;
-                            break;
-                        }
-                    }
-
-                    if !isThereAnEnd {
-                        println!("Frankolang Interpreter: Syntax error on byte {}, Instruction as decimal {}\nCould not find 0x02 instruction.", currentByte, code[currentByte]);
-                        return false;
-                    }
-
-                    // Find the signature and read it to a buffer
-                    let mut signature: [u8; 64] = [0; 64];
-                    for signatureBufferByte in currentByte+1..currentByte+65 {
-                        signature[signatureBufferByte -(currentByte+1)] = code[signatureBufferByte];
-                    }
-
-                    // Find public key and read it to a buffer
-                    let mut publicKey: [u8; 32] = [0; 32];
-                    for pkBufferByte in currentByte+65..currentByte+97 {
-                        publicKey[pkBufferByte - (currentByte+65)] = code[pkBufferByte];
-                    }
-
-                    // Verify the signature
-                    let publicKeyObject = ed25519_dalek::PublicKey::from_bytes(&publicKey).unwrap();
-                    let signatureObject = ed25519_dalek::Signature::from_bytes(&signature).unwrap();
-                    let verified = publicKeyObject.verify(&message, &signatureObject);
-                    print!("Signature is {:?}\n", verified.is_ok());
-
-                    currentByte+=97;
-                }
-                0x02 => {
-                    // endsig is one byte
-                    println!("Frankolang Interpreter: Interpreting endsig instruction");
-                    currentByte+=1;
-                }
-                0x03 => {
-                    // payto is 73 bytes
-                    println!("Frankolang Interpreter: Interpreting payto instruction");
-                    // match dryrun {   This can be used for once the interpreter does
-                    //     true => {}   more than just say what instruction it was given
-                    //     false => {
-                                // interpretation will go here
-                    //     }
-                    // }
-                    currentByte+=73;
-                }
-                0x04 => {
-                    // fee is 9 bytes
-                    println!("Frankolang Interpreter: Interpreting fee instruction");
-                    currentByte+=9;
-                }
-                _ => {
-                    println!("Frankolang Interpreter: Syntax error on byte {}, Instruction as decimal {}", currentByte, code[currentByte]);
-                    return false
-                }
+            0x03 => {
+                println!("Interpreting 0x03 instruction");
             }
-        }
 
+            0x04 => {
+                println!("Interpreting 0x04 instruction");
+            }
+
+            _ => { println!("{:#x}", codeSegment.currentInstruction()); }
+        }
+        codeSegment.moveIntructionPointerForward();
     }
+    return true;
 }
 
+struct CodeSegment<'a> {
+    start: usize,
+    end: usize,
+    instructionPointer: usize,
+    code: &'a[u8]
+}
 
-fn handle(mut socket: std::net::TcpStream) {
-    loop {
-        let mut req: [u8; 200] = [0; 200]; // It would be better if this was a vector so it didn't use up so much ram, but i couldn't figure it out and I don't wanna spend too much time on it
-        let err = socket.read(&mut req);
-        match err {
-            Err(e) => {
-                eprintln!("Frankolang Interpreter: Could not read from stream.\nError: {}", e);
-                return;
-            },
-            _ =>  {}
+impl CodeSegment<'_> {
+    fn new(code: &[u8], start: usize) -> CodeSegment {
+
+        return CodeSegment {
+            start: start,
+            end: CodeSegment::findEnd(code, start),
+            instructionPointer: 0,
+            code: code
         }
-        // Execute request
-        match req[0] {
-            0x11 => { // Real run
-                req.rotate_left(1);
-                Frankolang::interpretFrankolang(&req, false);
-            }
-            0x12 => { // Dry run
-                req.rotate_left(1);
-                if Frankolang::interpretFrankolang(&req, true) {
-                    let result: [u8; 1] = [1];
-                    let err = socket.write(&result);
-                    match err {
-                        Err(e) => eprintln!("Frankolang Interpreter: Could not write to socket. Error Message: {}", e),
-                        _ =>  {}
-                    }
-                } else {
-                    let result: [u8; 1] = [0];
-                    let err = socket.write(&result);
-                    match err {
-                        Err(e) => eprintln!("Frankolang Interpreter: Could not write to socket. Error Message: {}", e),
-                        _ =>  {}
-                    }
-                }
-            }
-            _ => {
-                println!("Frankolang Interpreter: {} is not a command", req[0]);
-            }
+    }
+
+    fn moveIntructionPointerForward(&mut self) {
+        self.instructionPointer += CodeSegment::bytesToNextInstruction(self.currentInstruction());
+    }
+
+    fn currentInstruction(&self) -> u8 {
+        self.code[self.instructionPointer]
+    }
+
+    fn isSignatureValid(&self) -> bool {
+        let publicKey = {
+            let mut publicKey = [0u8; 32];
+            fillBufferWith(&mut publicKey, self.code, 65, 32);
+
+            let publicKey = ed25519_dalek::PublicKey::from_bytes(&publicKey);
+            let publicKey = match publicKey {
+                Ok(publicKey) => publicKey,
+                Err(error) => { eprintln!("{}", error); return false },
+            };
+            publicKey
+        };
+        let signature = {
+            let mut signature = [0u8; 64];
+            fillBufferWith(&mut signature, self.code, 1, 64);
+
+            let signature = ed25519_dalek::Signature::from_bytes(&signature);
+            let signature = match signature {
+                Ok(signature) => signature,
+                Err(error) => { eprintln!("{}", error); return false },
+            };
+            signature
+        };
+        let message = {
+            let messageLength = self.code.len() - 97;
+            let mut message = Vec::new();
+            message.resize(messageLength, 0);
+            fillBufferWith(&mut message, self.code, 97, messageLength);
+            message
+        };
+
+        return publicKey.verify(&message, &signature).is_ok();
+    }
+
+    fn bytesToNextInstruction(instruction: u8) -> usize {
+        match instruction {
+            0x01 => 97,
+            0x02 => 1,
+            0x03 => 73,
+            0x04 => 9,
+            _ => 1
         }
-        std::thread::sleep(std::time::Duration::from_millis(100)); // Only checks every 100 milliseconds to not use up unnecissary computing power
+    }
+
+    fn findEnd(code: &[u8], start: usize) -> usize {
+        let mut currentInstruction = start;
+        loop {
+            currentInstruction += CodeSegment::bytesToNextInstruction(code[currentInstruction]);
+            if currentInstruction > code.len() - 1 { break 0; }
+            if code[currentInstruction] == 0x02 { break currentInstruction; };
+        }
     }
 }
