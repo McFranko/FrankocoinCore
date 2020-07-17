@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use crate::ed25519_dalek;
 
-pub mod payments;
+//pub mod payments;
 
 pub fn interpretFrankolang(code: &[u8], dryrun: bool) -> bool {
     let mut startOfCodeSegment = 0;
@@ -20,13 +20,9 @@ pub fn interpretFrankolang(code: &[u8], dryrun: bool) -> bool {
                 0x02 => { break }
 
                 0x03 => {
-                    // println!("Interpreting 0x03 instruction");
-                    let payment = payments::Payment
-
                 }
 
                 0x04 => {
-                    // println!("Interpreting 0x04 instruction");
                 }
 
                 _ => { println!("{:#x}", codeSegment.currentInstruction()); }

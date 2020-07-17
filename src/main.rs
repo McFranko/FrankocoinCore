@@ -20,7 +20,7 @@ fn main() {
     });
 
 
-    test::message();
+    test::frankolangInterpreterTest();
 
     loop {}
 }
@@ -31,7 +31,7 @@ fn connectionHandler(mut socket: std::net::TcpStream) {
 
     match splitBufferAt(&request, 0x0a, 1)[0] { // 0x0a is ASCII newline or \n
         b"newBlock" => {
-          
+
         },
         &_ => return
     }
@@ -43,4 +43,3 @@ pub fn splitBufferAt(buffer: &[u8], pattern: u8, iterations: usize) -> Vec<&[u8]
     let splitBuffer = buffer.splitn(iterations, |num| *num == pattern).collect();
     return splitBuffer;
 }
-
