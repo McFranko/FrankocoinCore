@@ -1,47 +1,69 @@
 #![allow(non_snake_case)]
-
 use crate::ed25519_dalek;
-use crate::header::*;
+
+pub mod payments;
 
 pub fn interpretFrankolang(code: &[u8], dryrun: bool) -> bool {
-    let mut codeSegment = CodeSegment::new(code, 0);
-    if !codeSegment.isSignatureValid() { return false; };
-    codeSegment.moveIntructionPointerForward();
+    let mut startOfCodeSegment = 0;
 
     loop {
-        match codeSegment.currentInstruction() {
-            0x02 => { return true }
+        let mut codeSegment = match CodeSegment::new(code, startOfCodeSegment) {
+            Ok(codeSegment) => codeSegment,
+            Err(_) => break false
+        };
 
-            0x03 => {
-                println!("Interpreting 0x03 instruction");
-            }
-
-            0x04 => {
-                println!("Interpreting 0x04 instruction");
-            }
-
-            _ => { println!("{:#x}", codeSegment.currentInstruction()); }
-        }
+        if !codeSegment.isSignatureValid() { break false; };
         codeSegment.moveIntructionPointerForward();
+
+        loop {
+            match codeSegment.currentInstruction() {
+                0x02 => { break }
+
+                0x03 => {
+                    // println!("Interpreting 0x03 instruction");
+                    let payment = payments::Payment
+
+                }
+
+                0x04 => {
+                    // println!("Interpreting 0x04 instruction");
+                }
+
+                _ => { println!("{:#x}", codeSegment.currentInstruction()); }
+            }
+            codeSegment.moveIntructionPointerForward();
+        }
+
+        if codeSegment.end >= code.len()-1 {
+            break true;
+        } else {
+            startOfCodeSegment = codeSegment.end;
+        }
     }
 }
 
 struct CodeSegment<'a> {
-    start: usize,
     end: usize,
     instructionPointer: usize,
+    publicKey: ed25519_dalek::PublicKey,
+    signature: ed25519_dalek::Signature,
     code: &'a[u8]
 }
 
 impl CodeSegment<'_> {
-    fn new(code: &[u8], start: usize) -> CodeSegment {
+    fn new(code: &[u8], start: usize) -> Result<CodeSegment, ed25519_dalek::SignatureError> {
+        let code = &code[start..CodeSegment::findEnd(code, start)+1];
+        let publicKey = ed25519_dalek::PublicKey::from_bytes(&code[65..97])?;
+        let signature = ed25519_dalek::Signature::from_bytes(&code[1..65])?;
 
-        return CodeSegment {
-            start: start,
-            end: CodeSegment::findEnd(code, start),
+        let codeSegment = CodeSegment {
+            end: start + CodeSegment::findEnd(code, start),
             instructionPointer: 0,
+            publicKey: publicKey,
+            signature: signature,
             code: code
-        }
+        };
+        Ok(codeSegment)
     }
 
     fn moveIntructionPointerForward(&mut self) {
@@ -53,37 +75,7 @@ impl CodeSegment<'_> {
     }
 
     fn isSignatureValid(&self) -> bool {
-        let publicKey = {
-            let mut publicKey = [0u8; 32];
-            fillBufferWith(&mut publicKey, self.code, 65, 32);
-
-            let publicKey = ed25519_dalek::PublicKey::from_bytes(&publicKey);
-            let publicKey = match publicKey {
-                Ok(publicKey) => publicKey,
-                Err(error) => { eprintln!("{}", error); return false },
-            };
-            publicKey
-        };
-        let signature = {
-            let mut signature = [0u8; 64];
-            fillBufferWith(&mut signature, self.code, 1, 64);
-
-            let signature = ed25519_dalek::Signature::from_bytes(&signature);
-            let signature = match signature {
-                Ok(signature) => signature,
-                Err(error) => { eprintln!("{}", error); return false },
-            };
-            signature
-        };
-        let message = {
-            let messageLength = self.code.len() - 97;
-            let mut message = Vec::new();
-            message.resize(messageLength, 0);
-            fillBufferWith(&mut message, self.code, 97, messageLength);
-            message
-        };
-
-        return publicKey.verify(&message, &signature).is_ok();
+        self.publicKey.verify(&self.code[97..self.code.len()], &self.signature).is_ok()
     }
 
     fn bytesToNextInstruction(instruction: u8) -> usize {

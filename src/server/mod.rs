@@ -17,7 +17,6 @@ impl TcpServer {
 
         for stream in listener.incoming() {
             let handler = self.handler;
-
             serverThreadPool.execute(move || {
                 (handler)(stream.expect("stream unreadable"));
             });
