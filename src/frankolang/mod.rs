@@ -4,7 +4,6 @@ use crate::ed25519_dalek;
 use crate::header::*;
 
 pub fn interpretFrankolang(code: &[u8], dryrun: bool) -> bool {
-
     let mut codeSegment = CodeSegment::new(code, 0);
     if !codeSegment.isSignatureValid() { return false; };
     codeSegment.moveIntructionPointerForward();
@@ -25,7 +24,6 @@ pub fn interpretFrankolang(code: &[u8], dryrun: bool) -> bool {
         }
         codeSegment.moveIntructionPointerForward();
     }
-    return true;
 }
 
 struct CodeSegment<'a> {

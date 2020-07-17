@@ -3,8 +3,7 @@
 // This file is just for useful functions and such that need to be accessible globally
 
 pub fn splitBufferAt(buffer: &[u8], pattern: u8, iterations: usize) -> Vec<&[u8]> {
-    let splitBuffer: Vec<&[u8]> = buffer.splitn(iterations, |num| *num == pattern).collect();
-    return splitBuffer;
+    buffer.splitn(iterations, |num| *num == pattern).collect::<Vec<&[u8]>>()
 }
 
 pub fn fillBufferWith(buffer: &mut [u8], bufferFiller: &[u8], start: usize, length: usize) {
