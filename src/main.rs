@@ -23,8 +23,7 @@ fn main() {
 
     test::message();
 
-    // I had it just sleep for a minute now so I can test the server without the program just closing on me
-    std::thread::sleep(std::time::Duration::from_secs(600));
+    loop {}
 }
 
 
