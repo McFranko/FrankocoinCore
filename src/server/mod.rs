@@ -11,22 +11,14 @@ pub struct TcpServer {
 
 impl TcpServer {
     pub fn start(&self, threads: usize) {
-        let listener = match std::net::TcpListener::bind(&self.ipAddress) {
-            Ok(listener) => listener,
-            Err(error) => { eprintln!("{}", error); return }
-        };
+        let listener = std::net::TcpListener::bind(&self.ipAddress).expect("failed to bind");
 
         let serverThreadPool = threadpool::ThreadPool::new(threads);
 
         for stream in listener.incoming() {
-            let stream = match stream {
-                Ok(stream) => stream,
-                Err(error) => { eprintln!("{}", error); return }
-            };
-
             let handler = self.handler;
             serverThreadPool.execute(move || {
-                (handler)(stream);
+                (handler)(stream.expect("stream unreadable"));
             });
         }
     }
