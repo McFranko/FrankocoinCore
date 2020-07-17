@@ -21,11 +21,11 @@ impl ThreadPool {
 
         return ThreadPool { workers, sender };
     }
-    pub fn execute<F>(&self, f: F)
+    pub fn execute<Function>(&self, function: Function)
     where
-        F: FnOnce() + Send + 'static,
+        Function: FnOnce() + Send + 'static,
     {
-        let job =  Box::new(f);
+        let job =  Box::new(function);
         self.sender.send(job).unwrap();
 
     }

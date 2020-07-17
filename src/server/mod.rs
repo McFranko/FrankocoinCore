@@ -11,8 +11,7 @@ pub struct TcpServer {
 
 impl TcpServer {
     pub fn start(&self, threads: usize) {
-        let listener = std::net::TcpListener::bind(&self.ipAddress);
-        let listener = match listener {
+        let listener = match std::net::TcpListener::bind(&self.ipAddress) {
             Ok(listener) => listener,
             Err(error) => { eprintln!("{}", error); return }
         };
@@ -24,8 +23,8 @@ impl TcpServer {
                 Ok(stream) => stream,
                 Err(error) => { eprintln!("{}", error); return }
             };
-            let handler = self.handler;
 
+            let handler = self.handler;
             serverThreadPool.execute(move || {
                 (handler)(stream);
             });
