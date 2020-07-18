@@ -4,7 +4,14 @@ use rand;
 
 use crate::frankolang;
 
-pub fn frankolangInterpreterTest() -> bool {
+pub fn runTests() {
+    let start = std::time::SystemTime::now();
+    let result = frankolangInterpreterTest();
+    let duration = start.elapsed().expect("clock may have gone backwards");
+    println!("Interpreter test returned {} after {:?}", result, duration);
+}
+
+fn frankolangInterpreterTest() -> bool {
     let mut message: [u8; 180] = [0; 180];
 
     message[0] = 0x03;
@@ -20,7 +27,8 @@ pub fn frankolangInterpreterTest() -> bool {
         messageToSign[byte] = message[byte];
     }
 
-    // This is just generating a signature on the message in order to test the signature checking on the Interpreter
+    // This is just generating a signature on the message in
+    // order to test the signature checking on the Interpreter
 
     let mut csprng = rand::rngs::OsRng;
     let keypair: ed25519_dalek::Keypair = ed25519_dalek::Keypair::generate(&mut csprng);

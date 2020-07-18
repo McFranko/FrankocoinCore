@@ -20,13 +20,14 @@ fn main() {
     });
 
 
-    test::frankolangInterpreterTest();
+    test::runTests();
 
     loop {}
 }
 
 fn connectionHandler(mut socket: std::net::TcpStream) {
     let mut request: [u8; 1048576] = [0; 1048576];
+
     socket.read(&mut request).unwrap();
 
     match splitBufferAt(&request, 0x0a, 1)[0] { // 0x0a is ASCII newline or \n
