@@ -47,5 +47,6 @@ fn frankolangInterpreterTest() -> bool {
         message[byte] = publicKey[byte-65];
     }
 
-    frankolang::interpretFrankolang(&message, true)
+    frankolang::interpretFrankolang(&message);
+    true
 }

@@ -1,5 +1,6 @@
 # Frankocoin Core
-I'm trying to make a crypto focused on compressing the amount of data required for typical transactions.
+Frankocoin is a cryptocurrency based around trying to compress the amount of
+data needed for a typical transaction
 
 The main part of Frankocoin is Frankolang, which is just a scripting language
 The language is actually written as byte code, so some functions may not even have an actual utf8 code fort them
@@ -10,7 +11,7 @@ For example instead of writing "pay 'utxohash' (amount from utxoHash) to 'reciev
 Assuming that 0x1 is the code for paying a utxoHash to someone (I haven't come up with a definitive plan for all the instructions yet)
 
 I've found that'll save around 30 bytes per transaction or something like that compared to my original plan.
-where I had the instructions written as human understandable words. I've found a typical transaction with one input address and one output address will take up at most like 160 bytes. In the future I may make a more human readable version of the language that compiles down to the byte code
+where I had the instructions written as human readable words. I've found a typical transaction with one input address and one output address will take up at most like 160 bytes. In the future I may make a more human readable version of the language that compiles down to the byte code
 
 If you run a node you'll be recieving blocks from miners, verifying the work and code signatures, and then interpreting the code. The frankolang interpreter will write the various data to the files it needs to and so on.
 
