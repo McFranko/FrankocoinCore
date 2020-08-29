@@ -4,20 +4,25 @@
 
 mod threadpool;
 
-pub struct TcpServer {
+pub struct TcpServer
+{
     pub ipAddress: std::string::String,
     pub handler: fn(std::net::TcpStream)
 }
 
-impl TcpServer {
-    pub fn start(&self, threads: usize) {
+impl TcpServer
+{
+    pub fn start(&self, threads: usize)
+    {
         let listener = std::net::TcpListener::bind(&self.ipAddress).expect("failed to bind");
 
         let serverThreadPool = threadpool::ThreadPool::new(threads);
 
-        for stream in listener.incoming() {
+        for stream in listener.incoming()
+        {
             let handler = self.handler;
-            serverThreadPool.execute(move || {
+            serverThreadPool.execute(move ||
+            {
                 (handler)(stream.expect("stream unreadable"));
             });
         }

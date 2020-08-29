@@ -11,7 +11,8 @@ mod test;
 
 use std::io::Read;
 
-fn main() {
+fn main()
+{
     // Need to add a config file
 
     let server = server::TcpServer {
@@ -27,7 +28,8 @@ fn main() {
     serverThread.join().unwrap();
 }
 
-fn connectionHandler(mut socket: std::net::TcpStream) {
+fn connectionHandler(mut socket: std::net::TcpStream)
+{
     let mut request: [u8; 1048576] = [0; 1048576];
 
     socket.read(&mut request).unwrap();

@@ -5,21 +5,26 @@ mod instructions;
 
 use codeSegment::CodeSegment;
 
-pub fn interpretFrankolang(code: &[u8]) -> bool {
+pub fn interpretFrankolang(code: &[u8]) -> bool
+{
     let mut startOfCodeSegment = 0;
-    loop {
-        let mut codeSegment = match CodeSegment::new(code, startOfCodeSegment) {
+    loop
+    {
+        let mut codeSegment = match CodeSegment::new(code, startOfCodeSegment)
+        {
             Ok(codeSegment) => codeSegment,
             Err(_) => {
                 return false;
             }
         };
-    
-        if !codeSegment.isSyntaxProper() || !codeSegment.isSignatureValid() {
+
+        if !codeSegment.isSyntaxProper() || !codeSegment.isSignatureValid()
+        {
             return false;
         }
         
-        if codeSegment.end >= code.len() - 1 {
+        if codeSegment.end >= code.len() - 1
+        {
             break;
         }
 

@@ -100,6 +100,7 @@ dependencies = [
 [[package]]
 name = "ed25519-dalek"
 version = "1.0.0-pre.3"
+source = "git+https://github.com/McFranko/ed25519-dalek#c1c715a7f9f7b514a5bc7eda3d1c3ad47ac2e368"
 dependencies = [
  "clear_on_drop",
  "curve25519-dalek",
