@@ -2,25 +2,28 @@
 Frankocoin is a cryptocurrency based around trying to compress the amount of
 data needed for a typical transaction
 
-The main part of Frankocoin is Frankolang, which is just a scripting language
-The language is actually written as byte code, so some functions may not even have an actual utf8 code fort them
-The reason for that is to keep everything as small as possible.
-For example instead of writing "pay 'utxohash' (amount from utxoHash) to 'recievers public key/address'" You'd be writing:
+Frankolang is the language that is used for interfacing with the database of
+balances and sending transaction, and what not. Frankolang is designed to be as
+small as possible so as to reduce transaction size. With frankolang,
+a transaction with one "input" (as you would call it in bitcoin terminology;
+frankocoin doesn't exactly have inputs and outputs) and one "output" and a fee,
+it would take 148 bytes compare this to bitcoin, which for a one input, one
+output transaction takes normally ~400 bytes.
+A smaller transaction size means more transactions in a block, which means
+lower fees
 
-0x1 0x(utxohash) 0x(publickey/address in der format)
-Assuming that 0x1 is the code for paying a utxoHash to someone (I haven't come up with a definitive plan for all the instructions yet)
+Frankohash is the mining algorithm used with frankolang. It requires that
+miners keep a full (or almost full) copy of the blockchain. It does this by
+having the miners hash every frankolang instruction and the header from each
+block with a nonce, and then add all of that together into a single hash. That
+hash must have a certain number of leading zeros. This makes it ASIC resistant
+due to the high memory requirement. It also forces miners to keep a copy of the
+blockchain. Well they don't have to make a full node (running a server where
+others can access the blockchain), that does mean that there will be a lot more
+people who have to check the blockchain and new blocks. This makes it more
+secure
 
-I've found that'll save around 30 bytes per transaction or something like that compared to my original plan.
-where I had the instructions written as human readable words. I've found a typical transaction with one input address and one output address will take up at most like 160 bytes. In the future I may make a more human readable version of the language that compiles down to the byte code
-
-If you run a node you'll be recieving blocks from miners, verifying the work and code signatures, and then interpreting the code. The frankolang interpreter will write the various data to the files it needs to and so on.
-
-One other big part of Frankocoin is the mining algorithm I intend on implementing. The idea is that miners will have to hash every line of code from the last n blocks (n is determined based on the amount of memory you want miners to use) and then add all those hashes together, add a nonce, hash it again and then determine if the resulting hash has a certain number of leading zeros to it. If it does, that work is valid.
-This accomplishes two things: a) it has a high memory requirement making it asic resistant, and b) it forces miners to keep a copy of the blockchain (or a part of it).
-
-Well there is no incentive for miners to host a server and run a full node, it does mean that they have to check the blockchain, and verify new blocks coming in. This means that it's much more likely for invalid blocks to be found and for the node who made them to be ousted. It contributes to a more secure and more verified network, making it safer for people who don't have the ability to run a node to be sure that the data they are getting is valid.
-
-Thank you for coming to my ted talk.
+Thank you for coming to my ted talk
 
 Any help and suggestions are much appreciatted.
 I have a notion page with a to do list and documentation, so use that if you feel like helping:
