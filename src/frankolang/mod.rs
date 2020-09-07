@@ -5,25 +5,18 @@ mod instructions;
 
 use codeSegment::CodeSegment;
 
-pub fn interpretFrankolang(code: &[u8]) -> bool
+pub fn interpretFrankolang(code: &[u8])
+    -> Result<(), Box<dyn std::error::Error>>
 {
     let mut startOfCodeSegment = 0;
     loop
     {
-        let mut codeSegment = match CodeSegment::new(code, startOfCodeSegment)
-        {
-            Ok(codeSegment) => codeSegment,
-            Err(_) => {
-                return false;
-            }
-        };
+        let mut codeSegment = CodeSegment::new(code, startOfCodeSegment)?;
 
-        if !codeSegment.isSyntaxProper() || !codeSegment.isSignatureValid()
-        {
-            return false;
-        }
+        codeSegment.isSignatureValid()?;
+        codeSegment.isSyntaxProper()?;
         
-        if codeSegment.end >= code.len() - 1
+        if codeSegment.end+1 >= code.len() - 1 || code[codeSegment.end+1] == 0x0f
         {
             break;
         }
@@ -31,6 +24,6 @@ pub fn interpretFrankolang(code: &[u8]) -> bool
         startOfCodeSegment = codeSegment.end + 1;
     }
 
-    true
+    Ok(())
 }
 

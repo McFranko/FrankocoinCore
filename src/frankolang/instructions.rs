@@ -4,8 +4,6 @@ use crate::md5;
 use crate::serde::{Serialize, Deserialize};
 use crate::bincode;
 use std::fs;
-use std::io::{Read, Write};
-use std::path::Path
 
 pub struct Payment
 {
@@ -17,7 +15,8 @@ pub struct Payment
 
 impl Payment
 {
-    pub fn send(&self) -> Result<(), Box<dyn std::error::Error>>
+    pub fn send(&self)
+        -> Result<(), Box<dyn std::error::Error>>
     {
         let senderBalanceEntry = match BalanceEntry::fromKey(&self.sender)
         {
@@ -37,7 +36,8 @@ impl Payment
 
     // This is a function instead of a variable so that the heap allocation
     // only happens if there is an error
-    fn insufficientFundsError() -> Box<std::io::Error>
+    fn insufficientFundsError() 
+        -> Box<std::io::Error>
     {
         Box::new(
             std::io::Error::new(
@@ -48,7 +48,8 @@ impl Payment
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Copy, Clone)]
+/// An entry into the balance sheet containing the user (publicKey) and their balance
+#[derive(Serialize, Deserialize, PartialEq, Copy, Clone)]
 pub struct BalanceEntry
 {
     publicKey: [u8; 32],
@@ -57,6 +58,9 @@ pub struct BalanceEntry
 
 impl BalanceEntry
 {
+    /// returns a BalanceEntry made with the public key
+    /// If the public key already has a balance entry, it will return that.
+    /// If the public key does not already have a balance entry, it will make a new one
     pub fn fromKey(publicKey: &[u8; 32])
         -> Result<BalanceEntry, Box<dyn std::error::Error>>
     {
@@ -75,13 +79,14 @@ impl BalanceEntry
             Err(_) => {
                 return Ok(fallbackBalanceEntry);
             }
-        }
+        };
 
         let balances: Vec<BalanceEntry> = bincode::deserialize(&file)?;
 
-        let balanceEntryPosition = match balances.iter().position(
-            |balanceEntry| &balanceEntry.publicKey == publicKey
-        ) {
+        let balanceEntryPosition = match balances
+            .iter()
+            .position(|balanceEntry| &balanceEntry.publicKey == publicKey)
+        {
             Some(balanceEntryPosition) => balanceEntryPosition,
             None => {
                 return Ok(fallbackBalanceEntry);
@@ -89,5 +94,10 @@ impl BalanceEntry
         };
 
         Ok(balances[balanceEntryPosition])
+    }
+
+    /// Saves the balance entry to the balance sheet
+    pub fn save(&self) {
+        // Todo
     }
 }
