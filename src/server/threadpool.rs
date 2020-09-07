@@ -1,30 +1,36 @@
 #![allow(non_snake_case)]
 #![allow(dead_code)]
 
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::sync::Mutex;
+
 pub struct ThreadPool
 {
     workers: Vec<Worker>,
-    sender: std::sync::mpsc::Sender<Job>
+    sender: mpsc::Sender<Job>
 }
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
 
 impl ThreadPool
 {
-    pub fn new(size: usize) -> ThreadPool
+    pub fn new(size: usize) 
+        -> ThreadPool
     {
         let mut workers = Vec::with_capacity(size);
 
-        let (sender, receiver) = std::sync::mpsc::channel();
-        let receiver = std::sync::Arc::new(std::sync::Mutex::new(receiver));
+        let (sender, receiver) = mpsc::channel();
+        let receiver = Arc::new(Mutex::new(receiver));
 
         for id in 0..size
         {
-            workers.push(Worker::new(id, std::sync::Arc::clone(&receiver)));
+            workers.push(Worker::new(id, Arc::clone(&receiver)));
         }
 
         return ThreadPool { workers, sender };
     }
+
     pub fn execute<Function>(&self, function: Function)
     where
         Function: FnOnce() + Send + 'static,
@@ -43,7 +49,8 @@ struct Worker
 
 impl Worker
 {
-    fn new(id: usize, receiver: std::sync::Arc<std::sync::Mutex<std::sync::mpsc::Receiver<Job>>>) -> Worker
+    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>)
+        -> Worker
     {
         let thread = std::thread::spawn(move || loop
         {

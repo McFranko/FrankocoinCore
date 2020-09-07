@@ -13,18 +13,22 @@ pub struct TcpServer
 impl TcpServer
 {
     pub fn start(&self, threads: usize)
+        -> Result<(), Box<dyn std::error::Error>>
     {
-        let listener = std::net::TcpListener::bind(&self.ipAddress).expect("failed to bind");
+        let listener = std::net::TcpListener::bind(&self.ipAddress)?;
 
         let serverThreadPool = threadpool::ThreadPool::new(threads);
 
         for stream in listener.incoming()
         {
             let handler = self.handler;
+            let stream = stream?;
+
             serverThreadPool.execute(move ||
             {
-                (handler)(stream.expect("stream unreadable"));
+                (handler)(stream);
             });
         }
+        Ok(())
     }
 }
