@@ -1,8 +1,9 @@
-use crate::frankolang::instructions;
+mod instructions;
 
-#[derive(Debug)]
-pub struct CodeSegment<'a>
-{
+use crate::clone_into_array;
+
+#[derive(Copy, Clone, Debug)]
+pub struct CodeSegment<'a> {
     pub end: usize,
     instructionPointer: usize,
     pub publicKey: ed25519_dalek::PublicKey,
@@ -10,8 +11,7 @@ pub struct CodeSegment<'a>
     code: &'a[u8]
 }
 
-impl CodeSegment<'_>
-{
+impl CodeSegment<'_> {
     pub fn new(code: &[u8], start: usize)
         -> Result<CodeSegment, ed25519_dalek::SignatureError>
     {
@@ -20,22 +20,21 @@ impl CodeSegment<'_>
         let codeSegment = CodeSegment
         {
             end: start + CodeSegment::findEnd(code, start),
-            instructionPointer: 0,
+            instructionPointer: 97,
             publicKey: ed25519_dalek::PublicKey::from_bytes(&code[1..33])?,
             signature: ed25519_dalek::Signature::from_bytes(&code[33..97])?,
-            code: code
+            code
         };
         Ok(codeSegment)
     }
 
-    fn nextInstruction(&mut self)
-    {
+    pub fn nextInstruction(&mut self) {
         self.instructionPointer += CodeSegment::lengthOfInstruction(
             self.currentInstruction()
         );
     }
 
-    fn currentInstruction(&self) 
+    pub fn currentInstruction(&self) 
         -> u8
     {
         self.code[self.instructionPointer]
@@ -54,8 +53,7 @@ impl CodeSegment<'_>
     fn lengthOfInstruction(instruction: u8)
         -> usize
     {
-        match instruction
-        {
+        match instruction {
             0x01 => 97,
             0x02 => 1,
             0x03 => 41,
@@ -67,8 +65,7 @@ impl CodeSegment<'_>
     fn doesInstructionExist(&self)
         -> bool
     {
-        match self.currentInstruction()
-        {
+        match self.currentInstruction() {
             0x01 | 0x02 | 0x03 | 0x04 => true,
             _ => false
         }
@@ -80,10 +77,8 @@ impl CodeSegment<'_>
         let oldInstructionPointer = self.instructionPointer;
         self.instructionPointer = 0;
 
-        loop
-        {
-            if !self.doesInstructionExist()
-            {
+        loop {
+            if !self.doesInstructionExist() {
                 return Err(
                     Box::new(
                         std::io::Error::new(
@@ -95,8 +90,7 @@ impl CodeSegment<'_>
                     )
                 );
             }
-            if self.instructionPointer >= self.end
-            {
+            if self.instructionPointer >= self.end {
                 break;
             }
             self.nextInstruction();
@@ -106,38 +100,71 @@ impl CodeSegment<'_>
         Ok(())
     }
 
-    fn executeInstruction(&self)
+    pub fn executeInstruction(&self)
+        -> Result<(), Box<dyn std::error::Error>>
     {
-        match self.currentInstruction()
-        {
-            0x03 =>
-            {
-                // payment
-                // get parameters
-                let reciever = &self.code[
-                    self.instructionPointer+1..self.instructionPointer+33
-                ];
-                let sender = self.publicKey.to_bytes();
-                // let amount = &self.code[self.instructionPointer+33+self];
-                // add parameters to Payment struct and get on with it
+        match self.currentInstruction() {
+            0x03 => { // Payment
+                // I would rather not have to do this conversions, if there is a better and cleaner
+                // way to do this that would be great, but I can't think of anything. These
+                // conversions need to be done in order to use the from_le_bytes() method
+                let reciever = clone_into_array(
+                    &self.code[self.instructionPointer+1..self.instructionPointer+33]
+                );
+
+                let amountSlice = clone_into_array(
+                    &self.code[self.instructionPointer+33..self.instructionPointer+41]
+                );
+
+                let amount = u64::from_le_bytes(amountSlice);
+
+                let mut payment = instructions::Payment::new(
+                    self.publicKey.to_bytes(),
+                    reciever,
+                    amount
+                )?;
+                payment.send()?;
             }
-            0x04 =>
-            {
-                //miner fee
+
+            0x04 => { // Fee
+                let amount = {
+                    let amount = clone_into_array(
+                        &self.code[self.instructionPointer+1..self.instructionPointer+9]
+                    );
+                    u64::from_le_bytes(amount)
+                };
+
+                let fee = instructions::Fee {
+                    sender: self.publicKey.to_bytes(),
+                    amount 
+                };
+                // TODO: Currently the fee is paid back to the sender. In production it should be
+                // sending it to the miner of the block (but mining hasn't been implemented yet)
+                fee.send(self.publicKey.to_bytes())?;
             }
-            _ =>
-            {
-                //error handling
+
+            _ => {
+                return Err(
+                    Box::new(
+                        std::io::Error::new(
+                            std::io::ErrorKind::Other,
+                            format!(
+                                "0x{:x} is not an instruction",
+                                self.currentInstruction()
+                            )
+                        )
+                    )
+                )
             }
-        }
+        };
+        Ok(())
     }
 
     fn findEnd(code: &[u8], start: usize)
         -> usize
     {
         let mut currentInstruction = start;
-        loop
-        {
+        loop {
             currentInstruction += CodeSegment::lengthOfInstruction(
                 code[currentInstruction]
             );
