@@ -8,7 +8,7 @@ small as possible so as to reduce transaction size. With frankolang,
 a transaction with one "input" (as you would call it in bitcoin terminology;
 frankocoin doesn't exactly have inputs and outputs) and one "output" and a fee,
 it would take 148 bytes compare this to bitcoin, which for a one input, one
-output transaction takes normally ~400 bytes.
+output transaction takes normally ~220 bytes.
 A smaller transaction size means more transactions in a block, which means
 lower fees
 
