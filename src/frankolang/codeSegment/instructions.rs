@@ -4,6 +4,8 @@ use crate::serde::{Serialize, Deserialize};
 use crate::bincode;
 use std::fs;
 
+/// When dryrun is set to true, no changes will be made to the database. Instead it will just
+/// return an Err() if the sender has insufficient funds
 #[derive(Copy, Clone)]
 pub struct Payment {
     pub senderBalanceEntry: BalanceEntry,
@@ -56,32 +58,6 @@ impl Payment {
     }
 }
 
-// The Fee struct isn't used rn, if tests
-// pub struct Fee {
-//     pub sender: [u8; 32],
-//     pub amount: u64
-// }
-// 
-// impl Fee {
-//     /// Right now the fee is just given to the sender instead of the miner, because mining hasn't
-//     /// been implemented yet
-//     pub fn send(&self, miner: [u8; 32])
-//         -> Result<(), Box<dyn std::error::Error>>
-//     {
-//         let mut payment = Payment::new(
-//             self.sender,
-//             miner,
-//             self.amount
-//         )?;
-//         payment.send()?;
-//         Ok(())
-//     }
-// }
-// 
-/// Balance entries are stored in a similar fashion to a linked list hash map.
-/// The hash is made by taking an md5 hash of the public key, and representing the first 2 bytes
-/// of it with the {:x?} formatter. That hash will be the name of the file in which the balance
-/// entry is located
 #[derive(Serialize, Deserialize, PartialEq, Copy, Clone)]
 pub struct BalanceEntry {
     publicKey: [u8; 32],
