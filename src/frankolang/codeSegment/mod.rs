@@ -1,6 +1,6 @@
 mod instructions;
 
-use crate::clone_into_array;
+use crate::cloneIntoArray;
 
 #[derive(Copy, Clone, Debug)]
 pub struct CodeSegment<'a> {
@@ -75,7 +75,7 @@ impl CodeSegment<'_> {
         -> Result<(), Box<dyn std::error::Error>>
     {
         let oldInstructionPointer = self.instructionPointer;
-        self.instructionPointer = 0;
+        self.instructionPointer = 97;
 
         loop {
             if !self.doesInstructionExist() {
@@ -90,9 +90,12 @@ impl CodeSegment<'_> {
                     )
                 );
             }
-            if self.instructionPointer >= self.end {
+
+            if self.instructionPointer >= self.end || self.currentInstruction() == 0x02 {
                 break;
             }
+
+            self.executeInstruction(true)?;
             self.nextInstruction();
         }
 
@@ -100,47 +103,50 @@ impl CodeSegment<'_> {
         Ok(())
     }
 
-    pub fn executeInstruction(&self)
+    pub fn executeInstruction(&self, dryrun: bool)
         -> Result<(), Box<dyn std::error::Error>>
     {
         match self.currentInstruction() {
             0x03 => { // Payment
-                // I would rather not have to do this conversions, if there is a better and cleaner
+                // I would rather not have to do these conversions, if there is a better and cleaner
                 // way to do this that would be great, but I can't think of anything. These
                 // conversions need to be done in order to use the from_le_bytes() method
-                let reciever = clone_into_array(
+                let reciever = cloneIntoArray(
                     &self.code[self.instructionPointer+1..self.instructionPointer+33]
                 );
 
-                let amountSlice = clone_into_array(
-                    &self.code[self.instructionPointer+33..self.instructionPointer+41]
-                );
-
-                let amount = u64::from_le_bytes(amountSlice);
+                let amount = {
+                    let amount = cloneIntoArray(
+                        &self.code[self.instructionPointer+33..self.instructionPointer+41]
+                    );
+                    u64::from_le_bytes(amount)
+                };
 
                 let mut payment = instructions::Payment::new(
                     self.publicKey.to_bytes(),
                     reciever,
-                    amount
+                    amount,
+                    dryrun
                 )?;
                 payment.send()?;
             }
 
             0x04 => { // Fee
                 let amount = {
-                    let amount = clone_into_array(
+                    let amount = cloneIntoArray(
                         &self.code[self.instructionPointer+1..self.instructionPointer+9]
                     );
                     u64::from_le_bytes(amount)
                 };
 
-                let fee = instructions::Fee {
-                    sender: self.publicKey.to_bytes(),
-                    amount 
-                };
                 // TODO: Currently the fee is paid back to the sender. In production it should be
                 // sending it to the miner of the block (but mining hasn't been implemented yet)
-                fee.send(self.publicKey.to_bytes())?;
+                let payment = instructions::Payment::new(
+                    self.publicKey.to_bytes(),
+                    self.publicKey.to_bytes(),
+                    amount,
+                    dryrun
+                );
             }
 
             _ => {

@@ -4,21 +4,24 @@ use crate::serde::{Serialize, Deserialize};
 use crate::bincode;
 use std::fs;
 
+#[derive(Copy, Clone)]
 pub struct Payment {
     pub senderBalanceEntry: BalanceEntry,
     pub recieverBalanceEntry: BalanceEntry,
-    pub amount: u64
+    pub amount: u64,
+    pub dryrun: bool
 }
 
 impl Payment {
-    pub fn new(sender: [u8; 32], reciever: [u8; 32], amount: u64)
+    pub fn new(sender: [u8; 32], reciever: [u8; 32], amount: u64, dryrun: bool)
         -> Result<Payment, Box<dyn std::error::Error>>
     {
         Ok(
             Payment {
                 senderBalanceEntry: BalanceEntry::new(&sender)?,
                 recieverBalanceEntry: BalanceEntry::new(&reciever)?,
-                amount
+                amount,
+                dryrun
             }
         )
     }
@@ -33,8 +36,10 @@ impl Payment {
         self.senderBalanceEntry.balance -= self.amount;
         self.recieverBalanceEntry.balance += self.amount;
 
-        self.senderBalanceEntry.save()?;
-        self.recieverBalanceEntry.save()?;
+        if !self.dryrun {
+            self.senderBalanceEntry.save()?;
+            self.recieverBalanceEntry.save()?;
+        }
 
         Ok(())
     }
@@ -51,27 +56,28 @@ impl Payment {
     }
 }
 
-pub struct Fee {
-    pub sender: [u8; 32],
-    pub amount: u64
-}
-
-impl Fee {
-    /// Right now the fee is just given to the sender instead of the miner, because mining hasn't
-    /// been implemented yet
-    pub fn send(&self, miner: [u8; 32])
-        -> Result<(), Box<dyn std::error::Error>>
-    {
-        let mut payment = Payment::new(
-            self.sender,
-            miner,
-            self.amount
-        )?;
-        payment.send()?;
-        Ok(())
-    }
-}
-
+// The Fee struct isn't used rn, if tests
+// pub struct Fee {
+//     pub sender: [u8; 32],
+//     pub amount: u64
+// }
+// 
+// impl Fee {
+//     /// Right now the fee is just given to the sender instead of the miner, because mining hasn't
+//     /// been implemented yet
+//     pub fn send(&self, miner: [u8; 32])
+//         -> Result<(), Box<dyn std::error::Error>>
+//     {
+//         let mut payment = Payment::new(
+//             self.sender,
+//             miner,
+//             self.amount
+//         )?;
+//         payment.send()?;
+//         Ok(())
+//     }
+// }
+// 
 /// Balance entries are stored in a similar fashion to a linked list hash map.
 /// The hash is made by taking an md5 hash of the public key, and representing the first 2 bytes
 /// of it with the {:x?} formatter. That hash will be the name of the file in which the balance
@@ -86,7 +92,7 @@ impl BalanceEntry {
     pub fn new(publicKey: &[u8; 32])
         -> Result<BalanceEntry, Box<dyn std::error::Error>>
     {
-        let fallbackBalanceEntry = BalanceEntry {
+       let fallbackBalanceEntry = BalanceEntry {
             publicKey: *publicKey,
             balance: 0
         };

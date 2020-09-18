@@ -1,5 +1,3 @@
-#![allow(non_snake_case)]
-
 mod codeSegment;
 
 use codeSegment::CodeSegment;
@@ -50,7 +48,7 @@ impl FrankolangCode<'_> {
     {
         for codeSegment in self.codeSegments.iter_mut() {
             loop {
-                codeSegment.executeInstruction()?;
+                codeSegment.executeInstruction(false)?;
                 codeSegment.nextInstruction();
                 if codeSegment.currentInstruction() == 0x02 {
                     break;
