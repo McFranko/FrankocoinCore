@@ -29,6 +29,6 @@ Any help and suggestions are much appreciatted.
 I have a notion page with a to do list and documentation, so use that if you feel like helping:
 https://www.notion.so/Frankocoin-6e01c1e090014704b487b3b5f5df0025       Please add a comment on the corresponding page if you start working on something
 
-Discord: McFronkle#0251
+Discord: McFranko#0251
 
 Email: mrelfranko@disroot.org
