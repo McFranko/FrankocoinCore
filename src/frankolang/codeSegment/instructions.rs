@@ -31,8 +31,8 @@ impl Payment {
     pub fn send(&mut self)
         -> Result<(), Box<dyn std::error::Error>>
     {
-	if self.senderBalanceEntry.balance < self.amount {
-            return Err(Payment::insufficientFundsError());
+	    if self.senderBalanceEntry.balance < self.amount {
+            return Err(Box::new(InsufficientFundsError));
         }
 
         self.senderBalanceEntry.balance -= self.amount;
@@ -45,18 +45,21 @@ impl Payment {
 
         Ok(())
     }
+}
 
-    fn insufficientFundsError() 
-        -> Box<std::io::Error>
+
+#[derive(Debug)]
+struct InsufficientFundsError;
+impl std::error::Error for InsufficientFundsError {}
+
+impl std::fmt::Display for InsufficientFundsError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter)
+        -> std::fmt::Result
     {
-        Box::new(
-            std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Insufficient funds"
-            )
-        )
+        write!(formatter, "Insufficient funds")
     }
 }
+
 
 #[derive(Serialize, Deserialize, PartialEq, Copy, Clone)]
 pub struct BalanceEntry {
