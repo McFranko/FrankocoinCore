@@ -5,10 +5,10 @@ use crate::cloneIntoArray;
 #[derive(Copy, Clone, Debug)]
 pub struct CodeSegment<'a> {
     pub end: usize,
-    instructionPointer: usize,
+    pub instructionPointer: usize,
     pub publicKey: ed25519_dalek::PublicKey,
     pub signature: ed25519_dalek::Signature,
-    code: &'a[u8]
+    pub code: &'a[u8]
 }
 
 impl CodeSegment<'_> {
@@ -50,7 +50,7 @@ impl CodeSegment<'_> {
         Ok(())
     }
 
-    fn lengthOfInstruction(instruction: u8)
+    pub fn lengthOfInstruction(instruction: u8)
         -> usize
     {
         match instruction {
@@ -81,12 +81,7 @@ impl CodeSegment<'_> {
             if !self.doesInstructionExist() {
                 return Err(
                     Box::new(
-                        std::io::Error::new(
-                            std::io::ErrorKind::Other,
-                            format!(
-                                "Improper instruction at {}", self.instructionPointer
-                            )
-                        )
+                        InvalidInstructionError::fromCodeSegment(self)
                     )
                 );
             }
@@ -141,24 +136,19 @@ impl CodeSegment<'_> {
 
                 // TODO: Currently the fee is paid back to the sender. In production it should be
                 // sending it to the miner of the block (but mining hasn't been implemented yet)
-                let payment = instructions::Payment::new(
+                let mut payment = instructions::Payment::new(
                     self.publicKey.to_bytes(),
                     self.publicKey.to_bytes(),
                     amount,
                     dryrun
-                );
+                )?;
+                payment.send()?;
             }
 
             _ => {
                 return Err(
                     Box::new(
-                        std::io::Error::new(
-                            std::io::ErrorKind::Other,
-                            format!(
-                                "0x{:x} is not an instruction",
-                                self.currentInstruction()
-                            )
-                        )
+                        InvalidInstructionError::fromCodeSegment(self)
                     )
                 )
             }
@@ -174,15 +164,44 @@ impl CodeSegment<'_> {
             currentInstruction += CodeSegment::lengthOfInstruction(
                 code[currentInstruction]
             );
-
-            if currentInstruction >= code.len()
-            {
+            if currentInstruction >= code.len() {
                 break 0;
             }
-            if code[currentInstruction] == 0x02
-            {
+            if code[currentInstruction] == 0x02 {
                 break currentInstruction;
             }
+        }
+    }
+}
+
+#[derive(Debug)]
+struct InvalidInstructionError {
+    instruction: u8,
+    instructionPointer: usize
+}
+impl std::error::Error for InvalidInstructionError {}
+
+impl std::fmt::Display for InvalidInstructionError {
+
+    fn fmt(&self, formatter: &mut std::fmt::Formatter)
+        -> std::fmt::Result
+    {
+        write!(
+            formatter,
+            "Invalid instruction (0x{:x}) at byte {}",
+            self.instruction,
+            self.instructionPointer
+        )
+    }
+}
+
+impl InvalidInstructionError {
+    fn fromCodeSegment(codeSegment: &CodeSegment)
+        -> InvalidInstructionError
+    {
+        InvalidInstructionError {
+            instruction: codeSegment.currentInstruction(),
+            instructionPointer: codeSegment.instructionPointer
         }
     }
 }
