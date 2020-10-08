@@ -1,5 +1,6 @@
-#![allow(non_snake_case)]
+#![allow(non_snake_case, dead_code)]
 extern crate md5;
+extern crate sha2;
 extern crate ed25519_dalek;
 extern crate serde;
 extern crate bincode;
@@ -20,8 +21,8 @@ fn initializeFrankocoinDirectory()
     -> Result<(), Box<dyn std::error::Error>>
 {
     let dataDirPath = format!(
-        "{}/.frankocoin",
-        dirs::home_dir().unwrap().to_str().unwrap()
+        "{}/frankocoin",
+        dirs::data_dir().unwrap().to_str().unwrap()
     );
     let dataDir = Path::new(&dataDirPath);
 
@@ -42,12 +43,12 @@ fn initializeFrankocoinDirectory()
         "{}/blocks",
         dataDirPath
     );
-    fs::create_dir(blocksDir);
+    fs::create_dir(blocksDir)?;
 
     Ok(())
 }
 
-fn clone_into_array<A, T>(slice: &[T]) -> A
+fn cloneIntoArray<A, T>(slice: &[T]) -> A
 where
     A: Default + AsMut<[T]>,
     T: Clone,

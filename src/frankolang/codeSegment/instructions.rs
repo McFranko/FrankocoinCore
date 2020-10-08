@@ -147,8 +147,8 @@ fn findBalanceEntryFilename(publicKey: &[u8; 32])
     -> String
 {
     format!(
-        "{}/.frankocoin/balanceEntries/{:x?}.dat",
-        dirs::home_dir().unwrap().to_str().unwrap(),
+        "{}/frankocoin/balanceEntries/{:x?}.dat",
+        dirs::data_dir().unwrap().to_str().unwrap(),
         &md5::compute(publicKey)[0..2]
     )
 }
