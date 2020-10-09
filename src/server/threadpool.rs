@@ -1,4 +1,3 @@
-#![allow(non_snake_case)]
 #![allow(dead_code)]
 
 use std::sync::mpsc;
@@ -25,7 +24,7 @@ impl ThreadPool {
             workers.push(Worker::new(id, Arc::clone(&receiver)));
         }
 
-        return ThreadPool { workers, sender };
+        ThreadPool { workers, sender }
     }
 
     pub fn execute<Function>(&self, function: Function)
@@ -52,6 +51,6 @@ impl Worker {
             job();
         });
 
-        return Worker {id, thread};
+        Worker {id, thread}
     }
 }
