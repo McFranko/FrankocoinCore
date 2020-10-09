@@ -2,24 +2,24 @@ mod instructions;
 
 use crate::cloneIntoArray;
 
-#[derive(Copy, Clone, Debug)]
-pub struct CodeSegment<'a> {
+#[derive(Clone, Debug)]
+pub struct CodeSegment {
     pub end: usize,
     pub instructionPointer: usize,
     pub publicKey: ed25519_dalek::PublicKey,
     pub signature: ed25519_dalek::Signature,
-    pub code: &'a[u8]
+    pub code: Vec<u8>
 }
 
-impl CodeSegment<'_> {
-    pub fn new(code: &[u8], start: usize)
+impl CodeSegment {
+    pub fn new(code: Vec<u8>, start: usize)
         -> Result<CodeSegment, ed25519_dalek::SignatureError>
     {
-        let code = &code[start..CodeSegment::findEnd(code, start)+1];
+        let code = code[start..CodeSegment::findEnd(&code, start)+1].to_vec();
 
         let codeSegment = CodeSegment
         {
-            end: start + CodeSegment::findEnd(code, start),
+            end: start + CodeSegment::findEnd(&code, start),
             instructionPointer: 97,
             publicKey: ed25519_dalek::PublicKey::from_bytes(&code[1..33])?,
             signature: ed25519_dalek::Signature::from_bytes(&code[33..97])?,
@@ -79,11 +79,7 @@ impl CodeSegment<'_> {
 
         loop {
             if !self.doesInstructionExist() {
-                return Err(
-                    Box::new(
-                        InvalidInstructionError::fromCodeSegment(self)
-                    )
-                );
+                return Err(InvalidInstructionError::fromCodeSegment(self));
             }
 
             if self.instructionPointer >= self.end || self.currentInstruction() == 0x02 {
@@ -197,11 +193,12 @@ impl std::fmt::Display for InvalidInstructionError {
 
 impl InvalidInstructionError {
     fn fromCodeSegment(codeSegment: &CodeSegment)
-        -> InvalidInstructionError
+        -> Box<InvalidInstructionError>
     {
-        InvalidInstructionError {
+        let invalidInstructionError = InvalidInstructionError {
             instruction: codeSegment.currentInstruction(),
             instructionPointer: codeSegment.instructionPointer
         }
+        Box::new(invalidInstructionError)
     }
 }

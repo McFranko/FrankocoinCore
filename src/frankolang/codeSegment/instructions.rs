@@ -60,6 +60,14 @@ impl std::fmt::Display for InsufficientFundsError {
     }
 }
 
+impl InsufficientFundsError {
+    fn new()
+        -> Box<InsufficientFundsError>
+    {
+        Box::new(InsufficientFundsError)
+    }
+}
+
 
 #[derive(Serialize, Deserialize, PartialEq, Copy, Clone)]
 pub struct BalanceEntry {
