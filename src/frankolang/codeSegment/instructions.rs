@@ -32,7 +32,7 @@ impl Payment {
         -> Result<(), Box<dyn std::error::Error>>
     {
 	    if self.senderBalanceEntry.balance < self.amount {
-            return Err(Box::new(InsufficientFundsError));
+            return Err(InsufficientFundsError::new());
         }
 
         self.senderBalanceEntry.balance -= self.amount;

@@ -1,20 +1,20 @@
-mod codeSegment;
+pub mod codeSegment;
 
 use codeSegment::CodeSegment;
 
-pub struct FrankolangCode<'a> {
-    code: &'a [u8],
-    codeSegments: Vec<CodeSegment<'a>>
+pub struct FrankolangCode {
+    pub code: Vec<u8>,
+    pub codeSegments: Vec<CodeSegment>
 }
 
-impl FrankolangCode<'_> {
-    pub fn new(code: &[u8])
+impl FrankolangCode {
+    pub fn new(code: Vec<u8>)
         -> Result<FrankolangCode, Box<dyn std::error::Error>>
     {
         let mut codeSegments: Vec<CodeSegment> = Vec::new();
         let mut startOfCodeSegment = 0;
         loop {
-            let codeSegment = CodeSegment::new(code, startOfCodeSegment)?;
+            let codeSegment = CodeSegment::new(code.clone(), startOfCodeSegment)?;
 
             codeSegments.push(codeSegment.clone());
 
