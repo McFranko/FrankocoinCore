@@ -198,7 +198,7 @@ impl InvalidInstructionError {
         let invalidInstructionError = InvalidInstructionError {
             instruction: codeSegment.currentInstruction(),
             instructionPointer: codeSegment.instructionPointer
-        }
+        };
         Box::new(invalidInstructionError)
     }
 }
