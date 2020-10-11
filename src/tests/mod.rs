@@ -9,7 +9,6 @@ fn initializeFrankocoinDirectoryTest() {
     crate::initializeFrankocoinDirectory().unwrap();
 }
 
-mod blocks;
 mod frankolangInterpreter;
 mod server;
 
