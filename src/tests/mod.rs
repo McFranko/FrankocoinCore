@@ -9,13 +9,11 @@ fn initializeFrankocoinDirectoryTest() {
     crate::initializeFrankocoinDirectory().unwrap();
 }
 
+mod blocks;
 mod frankolangInterpreter;
-// mod blocks;
 mod server;
 
-pub fn testFrankolang()
-    -> [u8; 149]
-{
+pub fn testFrankolang() -> [u8; 149] {
     let mut codeToSign = [0u8; 51];
     codeToSign[0] = 0x03;
     // reciever public key and amount is left blank for now, as those features
@@ -25,11 +23,11 @@ pub fn testFrankolang()
     // fee is left empty because that hasn't been implemented yet
 
     codeToSign[50] = 0x02;
-    
+
     // Adding keys and signature
     let mut code = [0u8; 149];
     code[0] = 0x01;
-    let mut csprng = rand::rngs::OsRng{};
+    let mut csprng = rand::rngs::OsRng {};
     let keypair = ed25519_dalek::Keypair::generate(&mut csprng);
     for (index, byte) in code[1..33].iter_mut().enumerate() {
         *byte = keypair.public.to_bytes()[index];
@@ -48,4 +46,3 @@ pub fn testFrankolang()
 
     code
 }
-

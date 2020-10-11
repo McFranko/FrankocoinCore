@@ -1,48 +1,37 @@
 #![allow(non_snake_case, dead_code)]
-extern crate md5;
-extern crate sha2;
-extern crate ed25519_dalek;
-extern crate serde;
 extern crate bincode;
 extern crate dirs;
+extern crate ed25519_dalek;
+extern crate md5;
+extern crate serde;
+extern crate sha2;
 
+mod blocks;
 mod frankolang;
 mod server;
 mod tests;
 
-use std::path::Path;
 use std::fs;
+use std::path::Path;
 
-fn main() {
+fn main() {}
 
-}
-
-fn initializeFrankocoinDirectory()
-    -> Result<(), Box<dyn std::error::Error>>
-{
-    let dataDirPath = format!(
-        "{}/frankocoin",
-        dirs::data_dir().unwrap().to_str().unwrap()
-    );
+fn initializeFrankocoinDirectory() -> Result<(), Box<dyn std::error::Error>> {
+    let dataDirPath =
+        format!("{}/frankocoin", dirs::data_dir().unwrap().to_str().unwrap());
     let dataDir = Path::new(&dataDirPath);
 
     if dataDir.exists() {
-        return Ok(())
+        return Ok(());
     }
 
     fs::create_dir(dataDir)?;
 
-    let balanceEntriesDir = format!(
-        "{}/balanceEntries",
-        dataDirPath
-    );
+    let balanceEntriesDir = format!("{}/balanceEntries", dataDirPath);
     fs::create_dir(balanceEntriesDir)?;
 
     // Left off here
-    let blocksDir = format!(
-        "{}/blocks",
-        dataDirPath
-    );
+    let blocksDir = format!("{}/blocks", dataDirPath);
     fs::create_dir(blocksDir)?;
 
     Ok(())

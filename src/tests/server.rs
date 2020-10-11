@@ -1,4 +1,3 @@
-
 use crate::*;
 use std::io::Read;
 
@@ -6,7 +5,7 @@ use std::io::Read;
 fn server() {
     let server = server::TcpServer {
         ipAddress: String::from("localhost:8888"), // Need to change IP to the config files IP
-        handler: connectionHandler
+        handler: connectionHandler,
     };
     std::thread::spawn(move || {
         server.start(50).unwrap();

@@ -1,16 +1,17 @@
 mod threadpool;
 
-use std::net::{TcpStream, TcpListener};
+use std::net::{TcpListener, TcpStream};
 
 pub struct TcpServer {
     pub ipAddress: std::string::String,
-    pub handler: fn(TcpStream)
+    pub handler: fn(TcpStream),
 }
 
 impl TcpServer {
-    pub fn start(&self, threads: usize)
-        -> Result<(), Box<dyn std::error::Error>>
-    {
+    pub fn start(
+        &self,
+        threads: usize,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let listener = TcpListener::bind(&self.ipAddress)?;
 
         let serverThreadPool = threadpool::ThreadPool::new(threads);
