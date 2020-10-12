@@ -6,6 +6,7 @@ extern crate md5;
 extern crate serde;
 extern crate sha2;
 
+mod blocks;
 mod frankolang;
 mod server;
 mod tests;
@@ -20,18 +21,23 @@ fn initializeFrankocoinDirectory() -> Result<(), Box<dyn std::error::Error>> {
         format!("{}/frankocoin", dirs::data_dir().unwrap().to_str().unwrap());
     let dataDir = Path::new(&dataDirPath);
 
-    if dataDir.exists() {
-        return Ok(());
+    let balanceEntriesDirPath = format!("{}/balanceEntries", dataDirPath);
+    let balanceEntriesDir = Path::new(&balanceEntriesDirPath);
+
+    let blocksDirPath = format!("{}/blocks", dataDirPath);
+    let blocksDir = Path::new(&blocksDirPath);
+
+    if !dataDir.exists() {
+        fs::create_dir(dataDir)?;
     }
 
-    fs::create_dir(dataDir)?;
+    if !balanceEntriesDir.exists() {
+        fs::create_dir(balanceEntriesDir)?;
+    }
 
-    let balanceEntriesDir = format!("{}/balanceEntries", dataDirPath);
-    fs::create_dir(balanceEntriesDir)?;
-
-    // Left off here
-    let blocksDir = format!("{}/blocks", dataDirPath);
-    fs::create_dir(blocksDir)?;
+    if !blocksDir.exists() {
+        fs::create_dir(blocksDir)?;
+    }
 
     Ok(())
 }
