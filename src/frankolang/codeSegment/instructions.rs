@@ -1,6 +1,6 @@
 use crate::bincode;
 use crate::dirs;
-use crate::md5;
+use crate::md5::{Md5, Digest};
 use crate::serde::{Deserialize, Serialize};
 use std::fs;
 
@@ -138,9 +138,12 @@ fn readBalances(
 }
 
 fn findBalanceEntryFilename(publicKey: &[u8; 32]) -> String {
+    let mut hasher = Md5::new();
+    hasher.update(publicKey);
+    let hash = &hasher.finalize()[0..2];
     format!(
         "{}/frankocoin/balanceEntries/{:x?}.dat",
         dirs::data_dir().unwrap().to_str().unwrap(),
-        &md5::compute(publicKey)[0..2]
+        hash
     )
 }

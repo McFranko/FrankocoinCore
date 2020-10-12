@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-md5 = "0.7.0"
+md-5 = "0.9.1"
 sha2 = "0.9.1"
 ed25519-dalek = { git = "https://github.com/McFranko/ed25519-dalek" }
 rand = "0.7.3"
