@@ -6,7 +6,6 @@ extern crate md5;
 extern crate serde;
 extern crate sha2;
 
-mod blocks;
 mod frankolang;
 mod server;
 mod tests;
