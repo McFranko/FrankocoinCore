@@ -1,9 +1,8 @@
-mod threadpool;
-
+use crate::threadpool::ThreadPool;
 use std::net::{TcpListener, TcpStream};
 
 pub struct TcpServer {
-    pub ipAddress: std::string::String,
+    pub ip_address: std::string::String,
     pub handler: fn(TcpStream),
 }
 
@@ -12,15 +11,15 @@ impl TcpServer {
         &self,
         threads: usize,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let listener = TcpListener::bind(&self.ipAddress)?;
+        let listener = TcpListener::bind(&self.ip_address)?;
 
-        let serverThreadPool = threadpool::ThreadPool::new(threads);
+        let server_thread_pool = ThreadPool::new(threads);
 
         for stream in listener.incoming() {
             let handler = self.handler;
             let stream = stream?;
 
-            serverThreadPool.execute(move || {
+            server_thread_pool.execute(move || {
                 handler(stream);
             });
         }

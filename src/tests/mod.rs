@@ -5,23 +5,23 @@
 // (~/.frankocoin on UNIX systems)
 
 #[test]
-fn initializeFrankocoinDirectoryTest() {
-    crate::initializeFrankocoinDirectory().unwrap();
+fn init_frankocoin_directory_test() {
+    crate::init_frankocoin_directory().unwrap();
 }
 
-mod frankolangInterpreter;
+mod frankolang_interpreter;
 mod server;
 
-pub fn testFrankolang() -> [u8; 149] {
-    let mut codeToSign = [0u8; 51];
-    codeToSign[0] = 0x03;
+pub fn test_frankolang() -> [u8; 149] {
+    let mut code_to_sign = [0u8; 51];
+    code_to_sign[0] = 0x03;
     // reciever public key and amount is left blank for now, as those features
     // aren't implemented yet
 
-    codeToSign[41] = 0x04;
+    code_to_sign[41] = 0x04;
     // fee is left empty because that hasn't been implemented yet
 
-    codeToSign[50] = 0x02;
+    code_to_sign[50] = 0x02;
 
     // Adding keys and signature
     let mut code = [0u8; 149];
@@ -32,13 +32,13 @@ pub fn testFrankolang() -> [u8; 149] {
         *byte = keypair.public.to_bytes()[index];
     }
 
-    let signature = keypair.sign(&codeToSign);
+    let signature = keypair.sign(&code_to_sign);
     for (index, byte) in code[33..97].iter_mut().enumerate() {
         *byte = signature.to_bytes()[index];
     }
 
     for (index, byte) in code[97..148].iter_mut().enumerate() {
-        *byte = codeToSign[index];
+        *byte = code_to_sign[index];
     }
 
     code[148] = 0x0f;

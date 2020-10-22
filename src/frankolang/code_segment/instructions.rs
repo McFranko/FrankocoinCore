@@ -1,6 +1,6 @@
 use crate::bincode;
 use crate::dirs;
-use crate::md5::{Md5, Digest};
+use crate::md5::{Digest, Md5};
 use crate::serde::{Deserialize, Serialize};
 use std::fs;
 
@@ -8,8 +8,8 @@ use std::fs;
 /// return an Err() if the sender has insufficient funds
 #[derive(Copy, Clone)]
 pub struct Payment {
-    pub senderBalanceEntry: BalanceEntry,
-    pub recieverBalanceEntry: BalanceEntry,
+    pub sender_balance_entry: BalanceEntry,
+    pub reciever_balance_entry: BalanceEntry,
     pub amount: u64,
     pub dryrun: bool,
 }
@@ -22,24 +22,24 @@ impl Payment {
         dryrun: bool,
     ) -> Result<Payment, Box<dyn std::error::Error>> {
         Ok(Payment {
-            senderBalanceEntry: BalanceEntry::new(&sender)?,
-            recieverBalanceEntry: BalanceEntry::new(&reciever)?,
+            sender_balance_entry: BalanceEntry::new(&sender)?,
+            reciever_balance_entry: BalanceEntry::new(&reciever)?,
             amount,
             dryrun,
         })
     }
 
     pub fn send(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        if self.senderBalanceEntry.balance < self.amount {
+        if self.sender_balance_entry.balance < self.amount {
             return Err(InsufficientFundsError::new());
         }
 
-        self.senderBalanceEntry.balance -= self.amount;
-        self.recieverBalanceEntry.balance += self.amount;
+        self.sender_balance_entry.balance -= self.amount;
+        self.reciever_balance_entry.balance += self.amount;
 
         if !self.dryrun {
-            self.senderBalanceEntry.save()?;
-            self.recieverBalanceEntry.save()?;
+            self.sender_balance_entry.save()?;
+            self.reciever_balance_entry.save()?;
         }
 
         Ok(())
@@ -64,41 +64,41 @@ impl InsufficientFundsError {
 
 #[derive(Serialize, Deserialize, PartialEq, Copy, Clone)]
 pub struct BalanceEntry {
-    publicKey: [u8; 32],
+    public_key: [u8; 32],
     balance: u64,
 }
 
 impl BalanceEntry {
     pub fn new(
-        publicKey: &[u8; 32],
+        public_key: &[u8; 32],
     ) -> Result<BalanceEntry, Box<dyn std::error::Error>> {
-        let fallbackBalanceEntry = BalanceEntry {
-            publicKey: *publicKey,
+        let fallback_balance_entry = BalanceEntry {
+            public_key: *public_key,
             balance: 0,
         };
 
-        let balances = match readBalances(publicKey) {
+        let balances = match read_balances(public_key) {
             Ok(balances) => balances,
             Err(_) => {
-                return Ok(fallbackBalanceEntry);
+                return Ok(fallback_balance_entry);
             }
         };
 
-        let balanceEntryPosition = match balances
+        let balance_entry_position = match balances
             .iter()
-            .position(|balanceEntry| &balanceEntry.publicKey == publicKey)
+            .position(|balance_entry| &balance_entry.public_key == public_key)
         {
-            Some(balanceEntryPosition) => balanceEntryPosition,
+            Some(balance_entry_position) => balance_entry_position,
             None => {
-                return Ok(fallbackBalanceEntry);
+                return Ok(fallback_balance_entry);
             }
         };
 
-        Ok(balances[balanceEntryPosition])
+        Ok(balances[balance_entry_position])
     }
 
     pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let balances = match readBalances(&self.publicKey) {
+        let balances = match read_balances(&self.public_key) {
             Ok(balances) => balances,
             Err(_) => {
                 let mut balances: Vec<BalanceEntry> = Vec::new();
@@ -107,24 +107,24 @@ impl BalanceEntry {
             }
         };
 
-        let filename = findBalanceEntryFilename(&self.publicKey);
+        let filename = find_balance_entry_filename(&self.public_key);
 
-        let balancesBuffer = bincode::serialize(&balances)?;
-        fs::write(filename, balancesBuffer)?;
+        let balances_buffer = bincode::serialize(&balances)?;
+        fs::write(filename, balances_buffer)?;
 
         Ok(())
     }
 }
 
-fn readBalances(
-    publicKey: &[u8; 32],
+fn read_balances(
+    public_key: &[u8; 32],
 ) -> Result<Vec<BalanceEntry>, Box<dyn std::error::Error>> {
-    let filename = findBalanceEntryFilename(publicKey);
+    let filename = find_balance_entry_filename(public_key);
 
-    let balancesBuffer: Vec<u8> = fs::read(&filename)?;
+    let balances_buffer: Vec<u8> = fs::read(&filename)?;
 
     let balances: Vec<BalanceEntry> =
-        match bincode::deserialize(&balancesBuffer) {
+        match bincode::deserialize(&balances_buffer) {
             Ok(balances) => balances,
             Err(_) => {
                 // Panics because if a file is unable to be deserialized, that means it's been
@@ -137,9 +137,9 @@ fn readBalances(
     Ok(balances)
 }
 
-fn findBalanceEntryFilename(publicKey: &[u8; 32]) -> String {
+fn find_balance_entry_filename(public_key: &[u8; 32]) -> String {
     let mut hasher = Md5::new();
-    hasher.update(publicKey);
+    hasher.update(public_key);
     let hash = &hasher.finalize()[0..2];
     format!(
         "{}/frankocoin/balanceEntries/{:x?}.dat",

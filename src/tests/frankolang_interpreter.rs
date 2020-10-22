@@ -1,15 +1,15 @@
 extern crate rand;
-use crate::tests::testFrankolang;
+use crate::tests::test_frankolang;
 use crate::*;
 use std::time::Instant;
 
 #[test]
-pub fn frankolangInterpreter() {
-    let code = testFrankolang();
-    let mut frankolangCode =
+pub fn frankolang_interpreter() {
+    let code = test_frankolang();
+    let mut frankolang_code =
         frankolang::FrankolangCode::new(code.to_vec()).unwrap();
-    frankolangCode.checkCode().unwrap();
+    frankolang_code.check_code().unwrap();
     let duration = Instant::now();
-    frankolangCode.executeCode().unwrap();
+    frankolang_code.execute_code().unwrap();
     println!("Executing frankolang code took {:?}", duration.elapsed());
 }

@@ -1,4 +1,4 @@
-#![allow(non_snake_case, dead_code)]
+#![allow(dead_code)]
 extern crate bincode;
 extern crate dirs;
 extern crate ed25519_dalek;
@@ -9,39 +9,40 @@ extern crate sha2;
 mod frankolang;
 mod server;
 mod tests;
+mod threadpool;
 
 use std::fs;
 use std::path::Path;
 
 fn main() {}
 
-fn initializeFrankocoinDirectory() -> Result<(), Box<dyn std::error::Error>> {
-    let dataDirPath =
+fn init_frankocoin_directory() -> Result<(), Box<dyn std::error::Error>> {
+    let data_dir_path =
         format!("{}/frankocoin", dirs::data_dir().unwrap().to_str().unwrap());
-    let dataDir = Path::new(&dataDirPath);
+    let data_dir = Path::new(&data_dir_path);
 
-    let balanceEntriesDirPath = format!("{}/balanceEntries", dataDirPath);
-    let balanceEntriesDir = Path::new(&balanceEntriesDirPath);
+    let balance_entries_dir_path = format!("{}/balanceEntries", data_dir_path);
+    let balance_entries_dir = Path::new(&balance_entries_dir_path);
 
-    let blocksDirPath = format!("{}/blocks", dataDirPath);
-    let blocksDir = Path::new(&blocksDirPath);
+    let blocks_dir_path = format!("{}/blocks", data_dir_path);
+    let blocks_dir = Path::new(&blocks_dir_path);
 
-    if !dataDir.exists() {
-        fs::create_dir(dataDir)?;
+    if !data_dir.exists() {
+        fs::create_dir(data_dir)?;
     }
 
-    if !balanceEntriesDir.exists() {
-        fs::create_dir(balanceEntriesDir)?;
+    if !balance_entries_dir.exists() {
+        fs::create_dir(balance_entries_dir)?;
     }
 
-    if !blocksDir.exists() {
-        fs::create_dir(blocksDir)?;
+    if !blocks_dir.exists() {
+        fs::create_dir(blocks_dir)?;
     }
 
     Ok(())
 }
 
-fn cloneIntoArray<A, T>(slice: &[T]) -> A
+fn clone_into_array<A, T>(slice: &[T]) -> A
 where
     A: Default + AsMut<[T]>,
     T: Clone,

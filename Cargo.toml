@@ -1,5 +1,5 @@
 [package]
-name = "Frankocoin-Core"
+name = "frankocoin_core"
 version = "0.1.0"
 authors = ["McFranko <mrelfranko@disroot.org>"]
 edition = "2018"
