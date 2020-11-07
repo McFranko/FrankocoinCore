@@ -23,7 +23,7 @@ the network faster, but less scalable, well smaller blocks make the network more
 saleable but slower.
 
 The solution is obvious: transactions need to take up less space. Bitcoin
-transactions have a minimum size of around 200-250 bytes, but typically fall in
+transactions have a minimum size of around 170 bytes, but typically fall in
 the 500-700 byte range. My way to achieve this is instead of storing the whole
 transaction on the blockchain, only a 16 byte hash of the transaction is
 stored. So in order to make a transaction I would do the following:
