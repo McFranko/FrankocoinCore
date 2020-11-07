@@ -88,3 +88,6 @@ corresponding one on Frankocoin would take 128 bytes.
 
 13797 / 20480 * 100 = 67.4%
 ```
+One other notable thing is that in bitcoin, a scripted transaction takes up more
+and more space the more complex the transaction gets. In Frankocoin, the
+transaction script is always the same 16 bytes.
