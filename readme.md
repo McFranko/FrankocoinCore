@@ -25,26 +25,26 @@ saleable but slower.
 The solution is obvious: transactions need to take up less space. Bitcoin
 transactions have a minimum size of around 200-250 bytes, but typically fall in
 the 500-700 byte range. My way to achieve this is instead of storing the whole
-transaction on the blockchain, only a 16 byte fingerprint of the transaction is
+transaction on the blockchain, only a 16 byte hash of the transaction is
 stored. So in order to make a transaction I would do the following:
 
 1.  Write the script that would execute the transaction
 2.  Prove that I own enough coins to make the desired transaction by showing
-    that there is a fingerprint of a transaction that gave me coins on the
+    that there is a hash of a transaction that gave me coins on the
     blockchain
     -   Here is an example of the script:\
             pay 12 to ad649e8f6fh from a8969ddfcea99 signature=967e8fca72v\
             previousTransaction = {\
                 pay 12 to a8969ddfcea99 from as746af878483 signature=8a67e6f6c4a2\
             }\
-    -   The fingerprint of this transaction would be:\
+    -   The hash of this transaction would be:\
             004718a42c7c663804e2c5779927e591
     -   The previousTransaction is to prove that I actually own coins. If I own
-        coins, the receiver should be able to make a fingerprint of the
+        coins, the receiver should be able to make a hash of the
         previousTransaction and then check if it is on the blockchain. If it it,
         that means someone sent me coins, and that I own them.
-3.  I would send the new transaction fingerprint to a node, and wait for the
-    transaction fingerprint to be stored on a block.
+3.  I would send the new transaction hash to a node, and wait for the
+    transaction hash to be stored on a block.
 4.  The receiver of my transaction is now free to repeat the same process as me
     and spend their coins
 This is somewhat analogous to writing a check. The transaction script is the
@@ -54,7 +54,7 @@ doesn't actually contain the data of the transaction, just a very compressed
 version. This also has the side effect of making Frankocoin much more private
 than bitcoin. On bitcoin, you can find the balance of any address just by
 looking at the blockchain. With this protocol however, there isn't any info
-about the transactions displayed on the blockchain, just their fingerprint.
+about the transactions displayed on the blockchain, just their hash.
 
 Discord: McFranko#0251
 
