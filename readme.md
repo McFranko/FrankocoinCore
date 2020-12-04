@@ -25,9 +25,9 @@ The solution is obvious: transactions need to take up less space. Bitcoin
 transactions have a minimum size of around 170 bytes, but typically fall in
 the 500-700 byte range. My way to achieve this is instead of storing the whole
 transaction on the blockchain, only a hash of the transaction's
-script, the public key, the signature, and hashes of the previous transactions
+code, the public key, the signature, and hashes of the previous transactions
 that gave you the coins you are spending. A single input, single output
-transaction would take 128 bytes, and the script can be as complex and long as
+transaction would take 128 bytes, and the code can be as complex and long as
 you want without taking up any extra space on the blockchain. In order to make a
 transaction you would do the following:
 
@@ -90,4 +90,4 @@ corresponding one on Frankocoin would take 128 bytes.
 ```
 One other notable thing is that in bitcoin, a scripted transaction takes up more
 and more space the more complex the transaction gets. In Frankocoin, the
-transaction script is always the same 16 bytes.
+transaction code is always the same 16 bytes.
