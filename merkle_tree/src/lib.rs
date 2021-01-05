@@ -15,7 +15,7 @@ use std::convert::TryInto;
 /// If a layer in the merkle tree has an uneven amount of nodes, the last node in the layer will be
 /// cloned into the next layer. For example:
 ///
-/// ```
+/// ```text
 ///     fde7a5c     567hb34
 ///     /     \        |
 ///    /       \       |

@@ -13,7 +13,6 @@ impl MerkleProof {
 
         // Iterates through the layers until the second to last layer, as the last layer of the
         // merkle tree contains just the root.
-        println!("{}", merkle_tree.layers.len());
         for layer_index in 1..merkle_tree.layers.len() - 1 {
             let previous_hash = &layers[layer_index - 1].hash();
             let layer = Layer::from_hash(previous_hash, layer_index, merkle_tree)?;
@@ -31,7 +30,6 @@ impl MerkleProof {
             }
         }
 
-        println!("{:#x?}", layers.last().unwrap().hash());
 
         if &layers.last().unwrap().hash() != merkle_root {
             return false
