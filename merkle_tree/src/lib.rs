@@ -28,7 +28,6 @@ use std::convert::TryInto;
 pub struct MerkleTree {
     pub root: [u8; 28],
     layers: Vec<Layer>,
-    leafs: Vec<Vec<u8>>,
 }
 
 impl MerkleTree {
@@ -49,7 +48,6 @@ impl MerkleTree {
         MerkleTree {
             root: layers.last().unwrap().0[0].hash,
             layers,
-            leafs,
         }
     }
 
