@@ -144,19 +144,6 @@ impl Node {
         }
     }
 
-    fn from_leafs(left_leaf: &[u8], right_leaf: &[u8], index: usize) -> Self {
-        let to_hash = [left_leaf, right_leaf].concat();
-        let hash = Sha224::digest(&to_hash).try_into().unwrap();
-
-        Node {
-            hash,
-            index,
-            left_child_index: index,
-            right_child_index: Some(index + 1),
-            parent_index: None,
-        }
-    }
-
     fn set_parent_index(&mut self, index: usize) {
         self.parent_index = Some(index);
     }
