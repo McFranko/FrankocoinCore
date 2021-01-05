@@ -1,11 +1,32 @@
-extern crate sha2; 
+extern crate sha2;
+
+mod merkle_proof;
+
 use sha2::{Digest, Sha224};
+
+pub use merkle_proof::MerkleProof;
+
 use std::convert::TryInto;
 
-/// Creates a merkle tree based on some data represented as bytes
+/// Creates a merkle tree based on some data represented as bytes in a Vec<u8> form.
+///
+/// It uses Sha256 truncated to 224 bits for it's hash function.
+///
+/// If a layer in the merkle tree has an uneven amount of nodes, the last node in the layer will be
+/// cloned into the next layer. For example:
+///
+/// ```
+///     fde7a5c     567hb34
+///     /     \        |
+///    /       \       |
+/// a64bh38 a2bd78f 567hb31
+/// ```
+///
+/// The two leftmost hashes are hashed together, but the rightmost one doesn't have anything to be
+/// hashed with, and so it is just carried over to the next layer.
 #[derive(Debug)]
 pub struct MerkleTree {
-    root: [u8; 28],
+    pub root: [u8; 28],
     layers: Vec<Layer>,
     leafs: Vec<Vec<u8>>,
 }
@@ -28,36 +49,36 @@ impl MerkleTree {
         MerkleTree {
             root: layers.last().unwrap().0[0].hash,
             layers,
-            leafs
+            leafs,
         }
     }
 
     #[allow(unused_variables)]
-    pub fn get_proof(&self, hash: &[u8]) -> MerkleProof {
-        todo!()
+    pub fn get_proof(&self, hash: [u8; 28]) -> Option<MerkleProof> {
+        MerkleProof::new(hash, self)
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Layer(Vec<Node>);
 
 impl Layer {
     fn from_layer(layer: &mut Layer) -> Self {
         let mut nodes: Vec<Node> = Vec::new();
 
-
         for i in (0..layer.0.len()).step_by(2) {
-
             // If the last node doesn't have another node to be hashed with, it just carries the
             // node over to the next layer.
             if i + 1 >= layer.0.len() {
-                let node = Node::from_node(&layer.0[i], i);
+                let node_index = nodes.len();
+                let node = Node::from_node(&layer.0[i], node_index);
                 nodes.push(node);
                 break;
             }
 
-            let node = Node::from_nodes(&layer.0[i], &layer.0[i + 1], nodes.len());
-            
+            let node =
+                Node::from_nodes(&layer.0[i], &layer.0[i + 1], nodes.len());
+
             layer.0[i].set_parent_index(nodes.len());
             layer.0[i + 1].set_parent_index(nodes.len());
 
@@ -70,17 +91,9 @@ impl Layer {
     fn from_leafs(leafs: &Vec<Vec<u8>>) -> Self {
         let mut nodes: Vec<Node> = Vec::new();
 
-        for i in (0..leafs.len()).step_by(2) {
-            let left_leaf = &leafs[i];
-            let right_leaf = {
-                if i + 1 >= leafs.len() {
-                    left_leaf
-                } else {
-                    &leafs[i + 1]
-                }
-            };
-
-            let node = Node::from_leafs(left_leaf, right_leaf, i / 2);
+        for (i, leaf) in leafs.iter().enumerate() {
+            let hash = Sha224::digest(leaf).try_into().unwrap();
+            let node = Node::from_hash(hash, i);
             nodes.push(node);
         }
 
@@ -88,7 +101,7 @@ impl Layer {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Node {
     hash: [u8; 28],
     index: usize,
@@ -103,6 +116,16 @@ impl Node {
             hash: node.hash,
             index,
             left_child_index: node.index,
+            right_child_index: None,
+            parent_index: None,
+        }
+    }
+
+    fn from_hash(hash: [u8; 28], hash_index: usize) -> Self {
+        Node {
+            hash,
+            index: hash_index,
+            left_child_index: hash_index,
             right_child_index: None,
             parent_index: None,
         }
@@ -138,5 +161,3 @@ impl Node {
         self.parent_index = Some(index);
     }
 }
-
-pub struct MerkleProof;
