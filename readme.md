@@ -40,7 +40,7 @@ transaction you would do the following:
     -   The previous transaction is to verify that you are not going into debt by overspending. The receiver should be able to make a hash of the
         previous transaction and then check if it is on the blockchain. If it has been recorded,
         that means coins have been received, and that someone is in posession of them.
-3.  The transaction's script, your public key, the signature, and the
+3.  Your public key, the signature, and the
     hashes of the transactions  sent to a node, and wait for it to be
     processed and incorporated into the block. The transaction script would also be sent to the
     receiver.
