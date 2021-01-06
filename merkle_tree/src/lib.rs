@@ -1,12 +1,19 @@
 extern crate sha2;
 
+#[cfg(feature = "serde_support")]
+extern crate serde;
+
 mod merkle_proof;
+
+use std::convert::TryInto;
 
 use sha2::{Digest, Sha224};
 
+#[cfg(feature = "serde_support")]
+use serde::{Serialize, Deserialize};
+
 pub use merkle_proof::MerkleProof;
 
-use std::convert::TryInto;
 
 /// Creates a merkle tree based on some data represented as bytes in a Vec<u8> form.
 ///
@@ -24,6 +31,7 @@ use std::convert::TryInto;
 ///
 /// The two leftmost hashes are hashed together, but the rightmost one doesn't have anything to be
 /// hashed with, and so it is just carried over to the next layer.
+#[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 pub struct MerkleTree {
     pub root: [u8; 28],
@@ -57,6 +65,7 @@ impl MerkleTree {
     }
 }
 
+#[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone)]
 struct Layer(Vec<Node>);
 
@@ -99,6 +108,7 @@ impl Layer {
     }
 }
 
+#[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone)]
 struct Node {
     hash: [u8; 28],

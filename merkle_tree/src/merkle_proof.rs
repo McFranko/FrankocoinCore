@@ -1,7 +1,12 @@
-use crate::{Digest, MerkleTree, Sha224};
 use std::convert::TryInto;
 
+#[cfg(feature = "serde_support")]
+use crate::serde::{Serialize, Deserialize};
+
+use crate::{Digest, MerkleTree, Sha224};
+
 /// The proof that a given hash exists in the merkle tree.
+#[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 pub struct MerkleProof(Vec<Layer>);
 
@@ -40,6 +45,7 @@ impl MerkleProof {
 }
 
 
+#[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 pub struct Layer {
     left_hash: [u8; 28],
