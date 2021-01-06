@@ -5,7 +5,7 @@ extern crate serde;
 
 mod merkle_proof;
 
-use std::convert::TryInto;
+use std::convert::{TryInto};
 
 use sha2::{Digest, Sha224};
 
@@ -39,7 +39,15 @@ pub struct MerkleTree {
 }
 
 impl MerkleTree {
-    pub fn new(leafs: Vec<Vec<u8>>) -> Self {
+    pub fn new<T: Into<Vec<u8>>>(leafs: Vec<T>) -> Self {
+        let leafs = {
+            let mut byte_leafs: Vec<Vec<u8>> = Vec::with_capacity(leafs.len());
+            for leaf in leafs {
+                byte_leafs.push(leaf.into())
+            }
+            byte_leafs
+        };
+
         let mut layers: Vec<Layer> = Vec::new();
         let first_layer = Layer::from_leafs(&leafs);
         layers.push(first_layer);
