@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 
 #[cfg(feature = "serde_support")]
-use crate::serde::{Serialize, Deserialize};
+use crate::serde::{Deserialize, Serialize};
 
 use crate::{Digest, MerkleTree, Sha224};
 
@@ -20,7 +20,8 @@ impl MerkleProof {
         // merkle tree contains just the root.
         for layer_index in 1..merkle_tree.layers.len() - 1 {
             let previous_hash = &layers[layer_index - 1].hash();
-            let layer = Layer::from_hash(previous_hash, layer_index, merkle_tree)?;
+            let layer =
+                Layer::from_hash(previous_hash, layer_index, merkle_tree)?;
             layers.push(layer);
         }
 
@@ -35,15 +36,13 @@ impl MerkleProof {
             }
         }
 
-
         if &layers.last().unwrap().hash() != merkle_root {
-            return false
+            return false;
         }
-        
+
         true
     }
 }
-
 
 #[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
 #[derive(Debug)]
@@ -95,13 +94,11 @@ impl Layer {
     fn hash(&self) -> [u8; 28] {
         match self.right_hash.is_some() {
             true => {
-                let to_hash = [self.left_hash, self.right_hash.unwrap()].concat();
+                let to_hash =
+                    [self.left_hash, self.right_hash.unwrap()].concat();
                 Sha224::digest(&to_hash).try_into().unwrap()
             }
-            false => {
-                self.left_hash
-            }
+            false => self.left_hash,
         }
     }
 }
-

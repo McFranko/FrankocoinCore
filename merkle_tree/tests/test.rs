@@ -7,18 +7,7 @@ use sha2::{Digest, Sha224};
 use merkle_tree::MerkleTree;
 
 #[test]
-fn make_tree() -> Result<(), Box<dyn Error>> {
-    let test_data: Vec<Vec<u8>> = vec![vec![0; 2]; 5];
-
-    println!("Making tree:");
-    let merkle_tree = MerkleTree::new(test_data);
-    println!("{:x?}", merkle_tree);
-
-    Ok(())
-}
-
-#[test]
-fn get_proof() -> Result<(), Box<dyn Error>> {
+fn test() -> Result<(), Box<dyn Error>> {
     let test_data: Vec<Vec<u8>> = vec![
         vec![0x0; 2],
         vec![0x0a; 5],
@@ -30,10 +19,11 @@ fn get_proof() -> Result<(), Box<dyn Error>> {
     let merkle_tree = MerkleTree::new(test_data);
 
     let hash = &Sha224::digest(&[0x0a; 5])[..];
-    let merkle_proof = merkle_tree.get_proof(hash.try_into().unwrap()).ok_or("Couldn't get merkle proof")?;
-    println!("{:#x?}", merkle_proof);
-    println!("{:#x?}", merkle_tree);
+    let merkle_proof = merkle_tree
+        .get_proof(hash.try_into().unwrap())
+        .ok_or("Couldn't get merkle proof")?;
     assert!(merkle_proof.is_proof(&merkle_tree.root));
+    assert!(!merkle_proof.is_proof(&[0u8; 28]));
 
     Ok(())
 }
