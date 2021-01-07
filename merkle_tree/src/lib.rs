@@ -5,15 +5,14 @@ extern crate serde;
 
 mod merkle_proof;
 
-use std::convert::{TryInto};
+use std::convert::TryInto;
 
 use sha2::{Digest, Sha224};
 
 #[cfg(feature = "serde_support")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 pub use merkle_proof::MerkleProof;
-
 
 /// Creates a merkle tree based on some data represented as bytes in a Vec<u8> form.
 ///
@@ -40,13 +39,7 @@ pub struct MerkleTree {
 
 impl MerkleTree {
     pub fn new<T: Into<Vec<u8>>>(leafs: Vec<T>) -> Self {
-        let leafs = {
-            let mut byte_leafs: Vec<Vec<u8>> = Vec::with_capacity(leafs.len());
-            for leaf in leafs {
-                byte_leafs.push(leaf.into())
-            }
-            byte_leafs
-        };
+        let leafs: Vec<Vec<u8>> = convert_vec_type(leafs);
 
         let mut layers: Vec<Layer> = Vec::new();
         let first_layer = Layer::from_leafs(&leafs);
@@ -163,4 +156,15 @@ impl Node {
     fn set_parent_index(&mut self, index: usize) {
         self.parent_index = Some(index);
     }
+}
+
+fn convert_vec_type<T: Into<A>, A>(
+    vec: Vec<T>,
+) -> Vec<A> {
+    let mut end_vec = Vec::with_capacity(vec.len());
+
+    for item in vec {
+        end_vec.push(item.into());
+    }
+    end_vec
 }
