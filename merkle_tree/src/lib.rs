@@ -38,7 +38,11 @@ pub struct MerkleTree {
 }
 
 impl MerkleTree {
-    pub fn new<T: Into<Vec<u8>>>(leafs: Vec<T>) -> Self {
+    pub fn new<T>(leafs: &[T]) -> Self 
+    where
+        Vec<u8>: From<T>,
+        T: Clone,
+    {
         let leafs: Vec<Vec<u8>> = convert_vec_type(leafs);
 
         let mut layers: Vec<Layer> = Vec::new();
@@ -158,13 +162,15 @@ impl Node {
     }
 }
 
-fn convert_vec_type<T: Into<A>, A>(
-    vec: Vec<T>,
+fn convert_vec_type<T: Clone, A: From<T>>(
+    vec: &[T],
 ) -> Vec<A> {
-    let mut end_vec = Vec::with_capacity(vec.len());
+    let mut end_vec: Vec<A> = Vec::with_capacity(vec.len());
 
     for item in vec {
-        end_vec.push(item.into());
+        let end_item: A = A::from(item.clone());
+        end_vec.push(end_item);
     }
     end_vec
 }
+
