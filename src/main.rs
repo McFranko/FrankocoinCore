@@ -7,10 +7,14 @@ extern crate serde;
 extern crate sha2;
 extern crate typetag;
 
+extern crate merkle_tree;
+
 mod blocks;
 mod server;
-mod tests;
 mod threadpool;
+
+#[cfg(test)]
+mod tests;
 
 use std::fs;
 use std::path::Path;
