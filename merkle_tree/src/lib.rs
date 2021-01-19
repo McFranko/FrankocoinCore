@@ -100,7 +100,7 @@ impl Layer {
         Layer(nodes)
     }
 
-    fn from_leafs(leafs: &Vec<Vec<u8>>) -> Self {
+    fn from_leafs(leafs: &[Vec<u8>]) -> Self {
         let mut nodes: Vec<Node> = Vec::new();
 
         for (i, leaf) in leafs.iter().enumerate() {
