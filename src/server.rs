@@ -2,11 +2,18 @@ use crate::threadpool::ThreadPool;
 use std::net::{TcpListener, TcpStream};
 
 pub struct TcpServer {
-    pub ip_address: std::string::String,
-    pub handler: fn(TcpStream),
+    ip_address: String,
+    handler: fn(TcpStream),
 }
 
 impl TcpServer {
+    pub fn new(ip_address: String, handler: fn(TcpStream)) -> Self {
+        TcpServer {
+            ip_address,
+            handler
+        }
+    }
+
     pub fn start(
         &self,
         threads: usize,
