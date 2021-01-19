@@ -3,8 +3,3 @@
 
 mod blocks;
 mod server;
-
-#[test]
-fn init_frankocoin_directory_test() {
-    crate::init_frankocoin_directory().unwrap();
-}

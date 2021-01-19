@@ -6,6 +6,8 @@ extern crate md5;
 extern crate serde;
 extern crate sha2;
 extern crate typetag;
+#[macro_use]
+extern crate lazy_static;
 
 extern crate merkle_tree;
 
@@ -19,22 +21,25 @@ mod tests;
 use std::fs;
 use std::path::Path;
 
+lazy_static! {
+    static ref FRANKOCOIN_DIRECTORY: String = {
+        format!("{}/frankocoin", dirs::data_dir().unwrap().to_str().unwrap())
+    };
+}
+
 fn main() {}
 
-fn init_frankocoin_directory() -> Result<(), Box<dyn std::error::Error>> {
-    let data_dir_path =
-        format!("{}/frankocoin", dirs::data_dir().unwrap().to_str().unwrap());
-    let data_dir = Path::new(&data_dir_path);
-
-    let blocks_dir_path = format!("{}/blocks", data_dir_path);
-    let blocks_dir = Path::new(&blocks_dir_path);
-
-    if !data_dir.exists() {
-        fs::create_dir(data_dir)?;
+/// Creates the directories for frankocoin (if they don't already exist)
+fn init_frankocoin_directory(
+    frankocoin_directory: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if !Path::new(frankocoin_directory).exists() {
+        fs::create_dir(frankocoin_directory)?;
     }
 
-    if !blocks_dir.exists() {
-        fs::create_dir(blocks_dir)?;
+    let blocks_directory = format!("{}/blocks", frankocoin_directory);
+    if !Path::new(&blocks_directory).exists() {
+        fs::create_dir(&blocks_directory)?;
     }
 
     Ok(())

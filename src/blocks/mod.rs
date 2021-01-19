@@ -1,7 +1,7 @@
 mod transaction;
 
 use crate::{
-    bincode, dirs,
+    bincode,
     merkle_tree::MerkleTree,
     serde::{Deserialize, Serialize},
     sha2::{Digest, Sha256},
@@ -34,11 +34,17 @@ impl Block {
         miner_address: [u8; 16],
         transactions: Vec<Transaction>,
     ) -> Result<Block, Box<dyn Error>> {
+        // TODO
+        // Get previous_hash from the previous block instead of as a parameter
         let merkle_tree = MerkleTree::new(&transactions);
 
-        let to_hash =
-            [previous_hash.into(), merkle_tree.root.into(), height.to_le_bytes().into(), nonce.clone()]
-                .concat();
+        let to_hash = [
+            previous_hash.into(),
+            merkle_tree.root.into(),
+            height.to_le_bytes().into(),
+            nonce.clone(),
+        ]
+        .concat();
         let hash = Sha256::digest(&to_hash).into();
 
         Ok(Block {
@@ -52,26 +58,26 @@ impl Block {
         })
     }
 
-    pub fn from_height(height: u64) -> Result<Block, Box<dyn Error>> {
-        let file_name = format!(
-            "{}/frankocoin/blocks/block{}.dat",
-            dirs::data_dir().unwrap().to_str().unwrap(),
-            height
-        );
+    pub fn from_height(
+        height: u64,
+        frankocoin_directory: &str,
+    ) -> Result<Block, Box<dyn Error>> {
+        let file_name =
+            format!("{}/blocks/block{}.dat", frankocoin_directory, height);
         let file = fs::read(file_name)?;
         let block: Block = bincode::deserialize(&file)?;
         Ok(block)
     }
 
     pub fn check_hash(
-        &mut self,
+        &self,
         leading_zeros: usize,
     ) -> Result<(), Box<dyn Error>> {
         let to_hash: Vec<u8> = vec![
             self.previous_hash.to_vec(),
             self.merkle_tree.root.to_vec(),
             self.height.to_le_bytes().into(),
-            self.nonce.clone()
+            self.nonce.clone(),
         ]
         .concat();
         let hash = &Sha256::digest(&to_hash)[..];
@@ -89,13 +95,24 @@ impl Block {
         Ok(())
     }
 
-    pub fn save(&self) -> Result<(), Box<dyn Error>> {
+    pub fn save(
+        &self,
+        frankocoin_directory: &str,
+    ) -> Result<(), Box<dyn Error>> {
         let file_name = format!(
-            "{}/frankocoin/blocks/block{}.dat",
-            dirs::data_dir().unwrap().to_str().unwrap(),
-            self.height
+            "{}/blocks/block{}.dat",
+            frankocoin_directory, self.height,
         );
+        println!("{}", file_name);
         fs::write(file_name, bincode::serialize(self)?)?;
+        Ok(())
+    }
+
+    pub fn check_transactions(&self) -> Result<(), Box<dyn Error>> {
+        for transaction in self.transactions.iter() {
+            transaction.check_signature()?;
+        }
+
         Ok(())
     }
 }

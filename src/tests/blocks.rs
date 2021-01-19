@@ -1,32 +1,49 @@
-use std::error::Error;
+use std::{error::Error, fs};
 
-use crate::blocks::{Block, Transaction};
+use crate::{
+    blocks::{Block, Transaction},
+    init_frankocoin_directory,
+};
 
 #[test]
 fn blocks() -> Result<(), Box<dyn Error>> {
+    // The directory used to store blocks for testing purposes. Normally the director would be the
+    // static variable FRANKOCOIN_DIRECTORY, but this test would overwrite anything that was
+    // currently in that directory if FRANKOCOIN_DIRECTORY was used for testing.
+    let frankocoin_directory = "./frankocoin_data";
+    init_frankocoin_directory(&frankocoin_directory)?;
+
     // This doesn't have proper information or addresses and such, this should be implemented into
     // the test when it's possible to do that.
-    let mut block = Block::new(
+    let block = Block::new(
         0,
         vec![0, 0],
         [5u8; 32],
         [0u8; 16],
-        transactions(),
+        construct_transactions(),
     )?;
     println!(
         "Block {}'s hash validity: {}",
         0,
-        block.check_hash(1).is_ok()
+        block.check_hash(0).is_ok(),
+    );
+    println!(
+        "Block {}'s transaction validity: {}",
+        0,
+        block.check_transactions().is_ok(),
     );
 
-    block.save()?;
+    block.save(&frankocoin_directory)?;
 
-    let _block = Block::from_height(0)?;
+    let _block = Block::from_height(0, &frankocoin_directory)?;
+
+    // Removes the directory after the test is finished in order to declutter the workspace
+    fs::remove_dir_all(&frankocoin_directory)?;
 
     Ok(())
 }
 
-fn transactions() -> Vec<Transaction> {
+fn construct_transactions() -> Vec<Transaction> {
     let transaction = Transaction {
         sender: [0u8; 32],
         signature: vec![0u8; 64],
