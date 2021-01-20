@@ -16,11 +16,11 @@ impl TcpServer {
 
     pub fn start(
         &self,
-        threads: usize,
+        max_thread_count: usize,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let listener = TcpListener::bind(&self.ip_address)?;
 
-        let server_thread_pool = ThreadPool::new(threads);
+        let server_thread_pool = ThreadPool::new(max_thread_count);
 
         for stream in listener.incoming() {
             let handler = self.handler;
