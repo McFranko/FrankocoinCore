@@ -28,7 +28,7 @@ impl TcpServer {
 
             server_thread_pool.execute(move || {
                 handler(stream);
-            });
+            })?;
         }
         Ok(())
     }

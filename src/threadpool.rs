@@ -1,52 +1,62 @@
-#![allow(dead_code)]
-
-use std::sync::mpsc;
-use std::sync::Arc;
-use std::sync::Mutex;
+use std::{
+    error::Error,
+    sync::{
+        mpsc::{self, Receiver},
+        Arc,
+        Mutex
+    },
+    thread
+};
 
 pub struct ThreadPool {
     workers: Vec<Worker>,
-    sender: mpsc::Sender<Job>,
+    tx: mpsc::Sender<Job>,
 }
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
 
 impl ThreadPool {
-    pub fn new(size: usize) -> ThreadPool {
-        let mut workers = Vec::with_capacity(size);
+    pub fn new(worker_count: usize) -> Self {
+        let (tx, rx) = mpsc::channel();
+        let rx = Arc::new(Mutex::new(rx));
 
-        let (sender, receiver) = mpsc::channel();
-        let receiver = Arc::new(Mutex::new(receiver));
+        let mut workers = Vec::with_capacity(worker_count);
 
-        for id in 0..size {
-            workers.push(Worker::new(id, Arc::clone(&receiver)));
+        for _ in 0..worker_count {
+            let worker = Worker::new(rx.clone());
+            workers.push(worker);
         }
 
-        ThreadPool { workers, sender }
+        Self {
+            workers,
+            tx
+        }
     }
-
-    pub fn execute<Function>(&self, function: Function)
+    pub fn execute<T>(&self, job: T) -> Result<(), Box<dyn Error>> 
     where
-        Function: FnOnce() + Send + 'static,
+        T: FnOnce() + Send + 'static
     {
-        let job = Box::new(function);
-        self.sender.send(job).unwrap();
+        let job = Box::new(job);
+        self.tx.send(job)?;
+        Ok(())
     }
 }
 
 struct Worker {
-    id: usize,
-    thread: std::thread::JoinHandle<()>,
+    thread: thread::JoinHandle<()>,
 }
 
 impl Worker {
-    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
-        let thread = std::thread::spawn(move || loop {
-            if let Ok(job) = receiver.lock().unwrap().recv() {
+    fn new(rx: Arc<Mutex<Receiver<Job>>>) -> Self {
+        let thread = thread::spawn(move || {
+            loop {
+                let job = rx.lock().unwrap().recv().unwrap();
                 job()
             }
         });
 
-        Worker { id, thread }
+        Worker {
+            thread
+        }
     }
 }
