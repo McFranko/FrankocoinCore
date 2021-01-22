@@ -1,17 +1,17 @@
 use std::{error::Error, fs};
 
-use crate::{
+use blockchain::{
     blocks::{Block, Transaction},
-    init_frankocoin_directory,
+    init_blockchain_directory,
 };
 
 #[test]
 fn blocks() -> Result<(), Box<dyn Error>> {
     // The directory used to store blocks for testing purposes. Normally the director would be the
-    // static variable FRANKOCOIN_DIRECTORY, but this test would overwrite anything that was
-    // currently in that directory if FRANKOCOIN_DIRECTORY was used for testing.
-    let frankocoin_directory = "./frankocoin_data";
-    init_frankocoin_directory(&frankocoin_directory)?;
+    // static variable blockchain_directory, but this test would overwrite anything that was
+    // currently in that directory if blockchain_directory was used for testing.
+    let blockchain_directory = "./blockchain_directory";
+    init_blockchain_directory(&blockchain_directory)?;
 
     // This doesn't have proper information or addresses and such, this should be implemented into
     // the test when it's possible to do that.
@@ -33,12 +33,12 @@ fn blocks() -> Result<(), Box<dyn Error>> {
         block.check_transactions().is_ok(),
     );
 
-    block.save(&frankocoin_directory)?;
+    block.save(&blockchain_directory)?;
 
-    let _block = Block::from_height(0, &frankocoin_directory)?;
+    let _block = Block::from_height(0, &blockchain_directory)?;
 
     // Removes the directory after the test is finished in order to declutter the workspace
-    fs::remove_dir_all(&frankocoin_directory)?;
+    fs::remove_dir_all(&blockchain_directory)?;
 
     Ok(())
 }

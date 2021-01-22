@@ -60,10 +60,10 @@ impl Block {
 
     pub fn from_height(
         height: u64,
-        frankocoin_directory: &str,
+        blockchain_directory: &str,
     ) -> Result<Block, Box<dyn Error>> {
         let file_name =
-            format!("{}/blocks/block{}.dat", frankocoin_directory, height);
+            format!("{}/block{}.dat", blockchain_directory, height);
         let file = fs::read(file_name)?;
         let block: Block = bincode::deserialize(&file)?;
         Ok(block)
@@ -97,11 +97,11 @@ impl Block {
 
     pub fn save(
         &self,
-        frankocoin_directory: &str,
+        blockchain_directory: &str,
     ) -> Result<(), Box<dyn Error>> {
         let file_name = format!(
-            "{}/blocks/block{}.dat",
-            frankocoin_directory, self.height,
+            "{}/block{}.dat",
+            blockchain_directory, self.height,
         );
         println!("{}", file_name);
         fs::write(file_name, bincode::serialize(self)?)?;
