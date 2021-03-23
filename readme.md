@@ -1,3 +1,6 @@
+This is now archived, this has moved to a new project,
+[PADLOCK](https://github.com/mcfranko/padlock-whitepaper)
+
 # Frankocoin
 Frankocoin is a concept for a scalable and private cryptocurrency. It will be
 able to process transactions at a rate 70%\* higher than bitcoin.
